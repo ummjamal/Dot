@@ -1,51 +1,72 @@
 package com.module.dot.utils;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class LocalFormat {
-    // System will check what language and country the device is set on
-    // System will cache the data
+public final class LocalFormat {
 
-    static SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
-    static SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.US);
-
-    // Currency
-    private static final Locale localCountry = Locale.US;
-//    private static final Locale localCountry = Locale.FRANCE;
-//    private static final Locale localCountry = new Locale("fr", "HT");
-
-
-    public static String getCurrencyFormat(double amount){
-        NumberFormat usDollarFormat = NumberFormat.getCurrencyInstance(localCountry);
-        return usDollarFormat.format(amount);
+    private LocalFormat() {
+        // Utility class - لا نحتاج إنشاء كائن منها
     }
-
 
     /**
+     * تنسيق المبالغ بالريال اليمني.
      *
-     * @return An array containing the formatted date and time. The first element
-     *         in the array is the date and the second element is the time.
+     * أمثلة:
+     * 0       -> 0 ر.ي
+     * 500     -> 500 ر.ي
+     * 1500    -> 1,500 ر.ي
+     * 25000   -> 25,000 ر.ي
      */
-    public static String[] getCurrentDateTime() {
-        // Get the current date and time.
-        Date date = new Date();
+    public static String getCurrencyFormat(double amount) {
 
-        // Get the formatted date and time.
-        String formattedDate = dateFormat.format(date);
-        String formattedTime = timeFormat.format(date);
+        DecimalFormatSymbols symbols =
+                new DecimalFormatSymbols(Locale.US);
 
-        // Create an array to store the formatted date and time.
-        String[] dateTime = new String[2];
+        DecimalFormat formatter =
+                new DecimalFormat("#,##0", symbols);
 
-        dateTime[0] = formattedDate;
-        dateTime[1] = formattedTime;
+        formatter.setGroupingUsed(true);
 
-        // Return the array.
-        return dateTime;
+        long roundedAmount =
+                Math.round(amount);
+
+        return formatter.format(roundedAmount)
+                + " ر.ي";
     }
 
+    /**
+     * إرجاع التاريخ والوقت الحاليين.
+     *
+     * index 0 = التاريخ
+     * index 1 = الوقت
+     *
+     * مثال:
+     * 2026-08-20
+     * 02:15:30
+     */
+    public static String[] getCurrentDateTime() {
+
+        Date now = new Date();
+
+        SimpleDateFormat dateFormatter =
+                new SimpleDateFormat(
+                        "yyyy-MM-dd",
+                        Locale.US
+                );
+
+        SimpleDateFormat timeFormatter =
+                new SimpleDateFormat(
+                        "HH:mm:ss",
+                        Locale.US
+                );
+
+        return new String[]{
+                dateFormatter.format(now),
+                timeFormatter.format(now)
+        };
+    }
 }

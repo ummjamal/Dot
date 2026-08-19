@@ -14,78 +14,202 @@ import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.module.dot.utils.FileManager;
-import com.module.dot.utils.LocalFormat;
 import com.module.dot.R;
 import com.module.dot.model.Item;
+import com.module.dot.utils.FileManager;
+import com.module.dot.utils.LocalFormat;
 import com.module.dot.view.fragments.HomeFragment;
 
 import java.util.ArrayList;
 
-public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
+public class ItemAdapter
+        extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
+
     private final ArrayList<Item> items;
     private final Context context;
     private HomeFragment homeFragment;
 
-    public ItemAdapter(ArrayList<Item> items, Context context) {
+    public ItemAdapter(
+            ArrayList<Item> items,
+            Context context
+    ) {
+
         this.items = items;
         this.context = context;
     }
 
-    public ItemAdapter(ArrayList<Item> items, Context context, HomeFragment homeFragment) { // Modify this line
+    public ItemAdapter(
+            ArrayList<Item> items,
+            Context context,
+            HomeFragment homeFragment
+    ) {
+
         this.items = items;
         this.context = context;
-        this.homeFragment = homeFragment; // Add this line
+        this.homeFragment = homeFragment;
     }
 
     @NonNull
     @Override
-    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_design, parent, false);
+    public ItemViewHolder onCreateViewHolder(
+            @NonNull ViewGroup parent,
+            int viewType
+    ) {
+
+        View view =
+                LayoutInflater
+                        .from(parent.getContext())
+                        .inflate(
+                                R.layout.item_design,
+                                parent,
+                                false
+                        );
+
         return new ItemViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        Drawable itemImage;
+    public void onBindViewHolder(
+            @NonNull ItemViewHolder holder,
+            int position
+    ) {
 
-        if (items.get(position).getImagePath() != null) {
-            itemImage = FileManager.loadImageLocally(context, "Items", items.get(position).getImagePath());
-        } else {
-            // Default image
-            // TODO: Use category image when item image is not available
-            itemImage = ContextCompat.getDrawable(context, R.drawable.baseline_no_image_24);
+        Item item =
+                items.get(position);
+
+        Drawable image = null;
+
+        if (
+                item.getImagePath() != null &&
+                !item.getImagePath().trim().isEmpty()
+        ) {
+
+            try {
+
+                image =
+                        FileManager.loadImageLocally(
+                                context,
+                                "Items",
+                                item.getImagePath()
+                        );
+
+            } catch (Exception ignored) {
+            }
         }
 
-        holder.ItemImageView.setImageDrawable(itemImage);
-        holder.ItemNameTextView.setText(items.get(position).getName());
-        holder.priceTextView.setText(LocalFormat.getCurrencyFormat(items.get(position).getPrice()));
-        holder.unitTypeTextView.setText((items.get(position).getUnitType()));
-        holder.backgroundColor.setBackgroundColor(0); // TODO: Set the background color
+        if (image == null) {
 
+            image =
+                    ContextCompat.getDrawable(
+                            context,
+                            R.drawable.baseline_no_image_24
+                    );
+        }
+
+        holder.image.setImageDrawable(image);
+
+        holder.name.setText(
+                item.getName()
+        );
+
+        holder.category.setText(
+                item.getCategory().isEmpty()
+                        ? "بدون قسم"
+                        : item.getCategory()
+        );
+
+        holder.price.setText(
+                LocalFormat.getCurrencyFormat(
+                        item.getPrice()
+                )
+        );
+
+        holder.unit.setText(
+                item.getUnitType().isEmpty()
+                        ? ""
+                        : item.getUnitType()
+        );
+
+        if (item.getStock() <= 0) {
+
+            holder.stock.setText(
+                    "نافد من المخزون"
+            );
+
+            holder.stock.setTextColor(
+                    ContextCompat.getColor(
+                            context,
+                            R.color.brand_error
+                    )
+            );
+
+        } else if (item.getStock() <= 5) {
+
+            holder.stock.setText(
+                    "متبقي: " +
+                            item.getStock()
+            );
+
+            holder.stock.setTextColor(
+                    ContextCompat.getColor(
+                            context,
+                            R.color.brand_warning
+                    )
+            );
+
+        } else {
+
+            holder.stock.setText(
+                    "المخزون: " +
+                            item.getStock()
+            );
+
+            holder.stock.setTextColor(
+                    ContextCompat.getColor(
+                            context,
+                            R.color.brand_success
+                    )
+            );
+        }
 
         holder.itemLayout.setOnClickListener(v -> {
-            if(homeFragment != null) {
-                Item selectedItem = new Item(
-                        items.get(position).getGlobalID(),
-                        items.get(position).getName(),
-                        items.get(position).getPrice(),
-                        items.get(position).getTax(),
-                        items.get(position).getSku(),
-                        1L
-                );
 
-                // TODO: Optimize - All the line below can be part of addToSElected Item method
-                double itemSelectedPrice = items.get(position).getPrice();
-                double tax = (items.get(position).getTax() / 100) * itemSelectedPrice;
-
-                homeFragment.totalItem++;
-
-                homeFragment.addToSelectedItems(selectedItem);
-                homeFragment.updateTax(tax);
-                homeFragment.updateAmount(itemSelectedPrice);
+            if (homeFragment == null) {
+                return;
             }
 
+            if (item.getStock() <= 0) {
+                return;
+            }
+
+            Item selectedItem =
+                    new Item(
+                            item.getGlobalID(),
+                            item.getName(),
+                            item.getPrice(),
+                            item.getTax(),
+                            item.getSku(),
+                            1L
+                    );
+
+            double tax =
+                    (item.getTax() / 100)
+                            *
+                            item.getPrice();
+
+            homeFragment.totalItem++;
+
+            homeFragment.addToSelectedItems(
+                    selectedItem
+            );
+
+            homeFragment.updateTax(
+                    tax
+            );
+
+            homeFragment.updateAmount(
+                    item.getPrice()
+            );
         });
     }
 
@@ -94,22 +218,66 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         return items.size();
     }
 
-    public static class ItemViewHolder extends RecyclerView.ViewHolder {
-        LinearLayout itemLayout;
-        ImageView ItemImageView;
-        TextView ItemNameTextView;
-        TextView priceTextView;
-        TextView unitTypeTextView;
-        CardView backgroundColor;
+    public static class ItemViewHolder
+            extends RecyclerView.ViewHolder {
 
-        public ItemViewHolder(View itemView) {
+        LinearLayout itemLayout;
+
+        ImageView image;
+
+        TextView name;
+        TextView category;
+        TextView price;
+        TextView stock;
+        TextView unit;
+
+        CardView card;
+
+        public ItemViewHolder(
+                @NonNull View itemView
+        ) {
+
             super(itemView);
-            itemLayout = itemView.findViewById(R.id.itemLL);
-            ItemImageView = itemView.findViewById(R.id.itemImageDesign);
-            ItemNameTextView = itemView.findViewById(R.id.itemNameHolderDesign);
-            priceTextView = itemView.findViewById(R.id.itemPriceHolderDesign);
-            unitTypeTextView = itemView.findViewById(R.id.itemUnitTypeHolderDesign);
-            backgroundColor = itemView.findViewById(R.id.ItemBackgroundColor);
+
+            itemLayout =
+                    itemView.findViewById(
+                            R.id.itemLL
+                    );
+
+            image =
+                    itemView.findViewById(
+                            R.id.itemImageDesign
+                    );
+
+            name =
+                    itemView.findViewById(
+                            R.id.itemNameHolderDesign
+                    );
+
+            category =
+                    itemView.findViewById(
+                            R.id.itemCategoryDesign
+                    );
+
+            price =
+                    itemView.findViewById(
+                            R.id.itemPriceHolderDesign
+                    );
+
+            stock =
+                    itemView.findViewById(
+                            R.id.itemStockDesign
+                    );
+
+            unit =
+                    itemView.findViewById(
+                            R.id.itemUnitTypeHolderDesign
+                    );
+
+            card =
+                    itemView.findViewById(
+                            R.id.ItemBackgroundColor
+                    );
         }
     }
 }
