@@ -2,6 +2,7 @@ package com.module.dot.view.fragments;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -12,6 +13,21 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputType;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -23,51 +39,50 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.module.dot.view.MainActivity;
-import com.module.dot.data.remote.FirebaseHandler;
-import com.module.dot.view.utils.ScannerManager;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 import com.module.dot.R;
+import com.module.dot.data.local.ItemDatabase;
 import com.module.dot.model.Item;
+import com.module.dot.utils.FileManager;
+import com.module.dot.view.MainActivity;
 
 import java.util.ArrayList;
-
+import java.util.Arrays;
+import java.util.UUID;
 
 public class NewItemFragment extends Fragment {
+
+    private static final String ADD_CATEGORY = "➕ إضافة قسم جديد";
+
     private ImageButton step1Button;
     private ImageButton step2Button;
     private ImageButton step3Button;
+
     private View contactLeft;
     private View contactRight;
-    private View OtherRight;
+    private View otherRight;
+
     private TextView stepTwoTextView;
     private TextView stepThreeTextView;
+
     private ProgressBar progressBar;
+
     private ImageButton previousButton;
     private ImageButton nextButton;
+
     private FrameLayout stepContentContainer;
+
     private View stepOneLayout;
     private View stepTwoLayout;
     private View stepThreeLayout;
-    private int currentStep = 1; // track step for next and previous button
 
+    private int currentStep = 1;
 
-    // Step One field
     private ImageView itemImage;
+
     private TextInputEditText itemName;
     private Spinner category;
     private TextInputEditText unitPrice;
@@ -76,27 +91,42 @@ public class NewItemFragment extends Fragment {
     private Spinner unitType;
     private TextInputEditText itemStock;
 
-    // Step Three field
     private TextInputEditText wholesalePrice;
     private TextInputEditText itemTax;
     private TextInputEditText itemDescription;
 
     private Button saveButton;
+
     private FragmentActivity fragmentActivity;
 
+    private ArrayAdapter<String> categoryAdapter;
+    private final ArrayList<String> categoryOptions = new ArrayList<>();
+
+    @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         fragmentActivity = (FragmentActivity) context;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_new_item_, container, false);
+    public View onCreateView(
+            LayoutInflater inflater,
+            ViewGroup container,
+            Bundle savedInstanceState
+    ) {
+        return inflater.inflate(
+                R.layout.fragment_new_item_,
+                container,
+                false
+        );
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(
+            @NonNull View view,
+            @Nullable Bundle savedInstanceState
+    ) {
+
         super.onViewCreated(view, savedInstanceState);
 
         progressBar = view.findViewById(R.id.progress_horizontal);
@@ -107,7 +137,7 @@ public class NewItemFragment extends Fragment {
 
         contactLeft = view.findViewById(R.id.contactLeftView);
         contactRight = view.findViewById(R.id.contactRightView);
-        OtherRight = view.findViewById(R.id.OtherRightView);
+        otherRight = view.findViewById(R.id.OtherRightView);
 
         stepTwoTextView = view.findViewById(R.id.stepTwoTextView);
         stepThreeTextView = view.findViewById(R.id.stepThreeTextView);
@@ -116,310 +146,897 @@ public class NewItemFragment extends Fragment {
         nextButton = view.findViewById(R.id.nextButton);
         saveButton = view.findViewById(R.id.saveButton);
 
-        stepContentContainer = view.findViewById(R.id.stepContentContainer);
+        stepContentContainer =
+                view.findViewById(R.id.stepContentContainer);
 
-        // Steps layout
-        stepOneLayout = LayoutInflater.from(getContext()).inflate(R.layout.new_item_form_step_one, null);
-        stepTwoLayout = LayoutInflater.from(getContext()).inflate(R.layout.new_item_form_step_two, null);
-        stepThreeLayout = LayoutInflater.from(getContext()).inflate(R.layout.new_item_form_step_three, null);
+        stepOneLayout = LayoutInflater
+                .from(getContext())
+                .inflate(R.layout.new_item_form_step_one, null);
 
-        // Step One form
-        itemImage = stepOneLayout.findViewById(R.id.newItemImage);
-        TextInputLayout itemNameLayout = stepOneLayout.findViewById(R.id.itemNameLayout);
-        itemName = stepOneLayout.findViewById(R.id.itemNameText);
-        category = stepOneLayout.findViewById(R.id.productCategoryText);
-        TextInputLayout unitPriceLayout = stepOneLayout.findViewById(R.id.unitPriceLayout);
-        unitPrice = stepOneLayout.findViewById(R.id.unitPriceText);
+        stepTwoLayout = LayoutInflater
+                .from(getContext())
+                .inflate(R.layout.new_item_form_step_two, null);
 
-        // Step two form
-        // Step Two field
-        TextInputLayout skuLayout = stepTwoLayout.findViewById(R.id.SKULayout);
-        sku = stepTwoLayout.findViewById(R.id.SKUText);
-        unitType = stepTwoLayout.findViewById(R.id.unitSpinner);
-        itemStock = stepTwoLayout.findViewById(R.id.stockText);
+        stepThreeLayout = LayoutInflater
+                .from(getContext())
+                .inflate(R.layout.new_item_form_step_three, null);
 
-        // Step three form
-        wholesalePrice = stepThreeLayout.findViewById(R.id.wholesalesPrice);
-        itemTax = stepThreeLayout.findViewById(R.id.taxText);
-        itemDescription = stepThreeLayout.findViewById(R.id.productDescriptionText);
+        itemImage =
+                stepOneLayout.findViewById(R.id.newItemImage);
 
-        // Have data from the database
-        ArrayList<String> categoryOptions = new ArrayList<>(); // Category Option Spinner
-        ArrayList<String> unitOptions = new ArrayList<>(); // Unit Option Spinner
+        itemName =
+                stepOneLayout.findViewById(R.id.itemNameText);
 
-        ScannerManager scannerManager = new ScannerManager(this);
+        category =
+                stepOneLayout.findViewById(R.id.productCategoryText);
 
-        // Progress bar default value
+        unitPrice =
+                stepOneLayout.findViewById(R.id.unitPriceText);
+
+        TextInputLayout skuLayout =
+                stepTwoLayout.findViewById(R.id.SKULayout);
+
+        sku =
+                stepTwoLayout.findViewById(R.id.SKUText);
+
+        unitType =
+                stepTwoLayout.findViewById(R.id.unitSpinner);
+
+        itemStock =
+                stepTwoLayout.findViewById(R.id.stockText);
+
+        wholesalePrice =
+                stepThreeLayout.findViewById(R.id.wholesalesPrice);
+
+        itemTax =
+                stepThreeLayout.findViewById(R.id.taxText);
+
+        itemDescription =
+                stepThreeLayout.findViewById(
+                        R.id.productDescriptionText
+                );
+
+        setupCategories();
+        setupUnits();
+        setupSteps();
+
+        ActivityResultLauncher<Intent> imagePickerLauncher =
+                registerForActivityResult(
+                        new ActivityResultContracts.StartActivityForResult(),
+                        result -> {
+
+                            if (
+                                    result.getResultCode() == RESULT_OK &&
+                                    result.getData() != null &&
+                                    result.getData().getData() != null
+                            ) {
+
+                                Uri uri =
+                                        result.getData().getData();
+
+                                itemImage.setImageURI(uri);
+                            }
+                        }
+                );
+
+        itemImage.setOnClickListener(v -> {
+
+            Intent intent = new Intent();
+
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+
+            imagePickerLauncher.launch(intent);
+        });
+
+        ActivityResultLauncher<ScanOptions> barcodeLauncher =
+                registerForActivityResult(
+                        new ScanContract(),
+                        result -> {
+
+                            if (
+                                    result != null &&
+                                    result.getContents() != null
+                            ) {
+
+                                sku.setText(
+                                        result.getContents()
+                                );
+                            }
+                        }
+                );
+
+        skuLayout.setEndIconOnClickListener(v -> {
+
+            ScanOptions options = new ScanOptions();
+
+            options.setPrompt("امسح باركود الصنف");
+            options.setBeepEnabled(true);
+            options.setOrientationLocked(false);
+
+            barcodeLauncher.launch(options);
+        });
+
+        saveButton.setOnClickListener(v -> saveItem());
+    }
+
+    private void setupCategories() {
+
+        categoryAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                categoryOptions
+        );
+
+        categoryAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        category.setAdapter(categoryAdapter);
+
+        reloadCategories();
+
+        category.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id
+                    ) {
+
+                        String selected =
+                                categoryOptions.get(position);
+
+                        if (ADD_CATEGORY.equals(selected)) {
+
+                            showAddCategoryDialog();
+
+                            category.setSelection(0);
+                        }
+                    }
+
+                    @Override
+                    public void onNothingSelected(
+                            AdapterView<?> parent
+                    ) {}
+                }
+        );
+    }
+
+    private void reloadCategories() {
+
+        categoryOptions.clear();
+
+        categoryOptions.add("اختر القسم");
+
+        try (ItemDatabase db =
+                     new ItemDatabase(requireContext())) {
+
+            categoryOptions.addAll(
+                    db.getCategories()
+            );
+        }
+
+        categoryOptions.add(ADD_CATEGORY);
+
+        categoryAdapter.notifyDataSetChanged();
+    }
+
+    private void showAddCategoryDialog() {
+
+        EditText input =
+                new EditText(requireContext());
+
+        input.setHint("مثال: المعلبات");
+        input.setSingleLine(true);
+        input.setInputType(
+                InputType.TYPE_CLASS_TEXT
+        );
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("إضافة قسم جديد")
+                .setView(input)
+                .setNegativeButton(
+                        "إلغاء",
+                        null
+                )
+                .setPositiveButton(
+                        "إضافة",
+                        (dialog, which) -> {
+
+                            String categoryName =
+                                    input.getText()
+                                            .toString()
+                                            .trim();
+
+                            if (categoryName.isEmpty()) {
+
+                                Toast.makeText(
+                                        requireContext(),
+                                        "أدخل اسم القسم",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+
+                                return;
+                            }
+
+                            try (ItemDatabase db =
+                                         new ItemDatabase(
+                                                 requireContext()
+                                         )) {
+
+                                boolean added =
+                                        db.addCategory(
+                                                categoryName
+                                        );
+
+                                if (added) {
+
+                                    reloadCategories();
+
+                                    int index =
+                                            categoryOptions
+                                                    .indexOf(
+                                                            categoryName
+                                                    );
+
+                                    if (index >= 0) {
+                                        category.setSelection(
+                                                index
+                                        );
+                                    }
+
+                                } else {
+
+                                    Toast.makeText(
+                                            requireContext(),
+                                            "القسم موجود مسبقًا",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            }
+                        }
+                )
+                .show();
+    }
+
+    private void setupUnits() {
+
+        ArrayList<String> units =
+                new ArrayList<>(
+                        Arrays.asList(
+                                "اختر الوحدة",
+                                "حبة",
+                                "علبة",
+                                "كرتون",
+                                "باكت",
+                                "كيس",
+                                "كيلو",
+                                "نصف كيلو",
+                                "جرام",
+                                "لتر",
+                                "نصف لتر",
+                                "درزن",
+                                "ربطة"
+                        )
+                );
+
+        ArrayAdapter<String> unitAdapter =
+                new ArrayAdapter<>(
+                        requireContext(),
+                        android.R.layout.simple_spinner_item,
+                        units
+                );
+
+        unitAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        unitType.setAdapter(unitAdapter);
+    }
+
+    private void setupSteps() {
+
         progressBar.setProgress(33);
 
-        step1Button.setOnClickListener(v -> {
-            // Handle Step 1 button click
-            showStepContent(1);
-        });
+        step1Button.setOnClickListener(
+                v -> showStepContent(1)
+        );
 
-        step2Button.setOnClickListener(v -> {
-            // Handle Step 2 button click
-            showStepContent(2);
-        });
+        step2Button.setOnClickListener(
+                v -> showStepContent(2)
+        );
 
-        step3Button.setOnClickListener(v -> {
-            // Handle Step 3 button click
-            showStepContent(3);
-        });
+        step3Button.setOnClickListener(
+                v -> showStepContent(3)
+        );
 
         previousButton.setOnClickListener(v -> {
-            currentStep--; // Decrease currentStep by 1
+            currentStep--;
             showStepContent(currentStep);
         });
 
         nextButton.setOnClickListener(v -> {
-            currentStep++; // Increase currentStep by 1
+            currentStep++;
             showStepContent(currentStep);
         });
 
-        // Show the initial step content
         showStepContent(currentStep);
+    }
 
-        // Load data to Category Option Spinner
-        categoryOptions.add("Category");
-        categoryOptions.add("Soft Drink");
-        categoryOptions.add("Alcohol");
-        categoryOptions.add("Game");
+    private void saveItem() {
 
-        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, categoryOptions);
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        category.setAdapter(categoryAdapter);
+        Item newItem = getItemFromForm();
 
-        // Load data to Product Unit spinner
-        unitOptions.add("Unit");
-        unitOptions.add("Hour");
-        unitOptions.add("Liter");
+        if (newItem == null) {
+            return;
+        }
 
-        ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitOptions);
-        unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        unitType.setAdapter(unitAdapter);
+        String globalId =
+                UUID.randomUUID().toString();
 
-        // Selected Image
-        ActivityResultLauncher<Intent> imagePickerLauncher =
-                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                        result -> {
-                            if (result.getResultCode() == RESULT_OK) {
-                                assert result.getData() != null;
-                                Uri uri = result.getData().getData();
-                                itemImage.setImageURI(uri);  // Set image to itemImage view
-                            }
-                        });
+        newItem.setGlobalID(globalId);
 
-        // Click on Image Item
-        itemImage.setOnClickListener(v -> {
-            Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            imagePickerLauncher.launch(intent);
+        String creatorId = "local-admin";
 
+        if (MainActivity.currentUser != null) {
 
-        });
+            if (
+                    MainActivity.currentUser.getCreatorID()
+                            != null &&
+                    !MainActivity.currentUser
+                            .getCreatorID()
+                            .trim()
+                            .isEmpty()
+            ) {
 
+                creatorId =
+                        MainActivity.currentUser
+                                .getCreatorID();
 
+            } else if (
+                    MainActivity.currentUser
+                            .getGlobalID() != null
+            ) {
 
+                creatorId =
+                        MainActivity.currentUser
+                                .getGlobalID();
+            }
+        }
 
-        saveButton.setOnClickListener(v -> {
-            Item newItem = getItemFromForm();
-            newItem.setCreatorID(MainActivity.currentUser.getCreatorID());
+        newItem.setCreatorID(creatorId);
 
-            Drawable itemImageTemp;
+        Drawable currentImage =
+                itemImage.getDrawable();
 
-            if (!isImageSame(itemImage.getDrawable(), ContextCompat.getDrawable(getContext(), R.drawable.uploading))) {
-                itemImageTemp = itemImage.getDrawable();
-            } else{
-                itemImageTemp = null;
+        Drawable defaultImage =
+                ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.uploading
+                );
+
+        boolean hasImage =
+                currentImage != null &&
+                defaultImage != null &&
+                !isImageSame(
+                        currentImage,
+                        defaultImage
+                );
+
+        if (hasImage) {
+
+            newItem.setImagePath(globalId);
+
+            try {
+
+                FileManager.saveImageLocally(
+                        requireContext(),
+                        currentImage,
+                        "Items",
+                        globalId
+                );
+
+            } catch (Exception e) {
+
+                newItem.setImagePath(null);
+            }
+        }
+
+        try (ItemDatabase db =
+                     new ItemDatabase(requireContext())) {
+
+            db.createItem(newItem);
+
+            Toast.makeText(
+                    requireContext(),
+                    "تم حفظ الصنف في البقالة بنجاح",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            FragmentManager fragmentManager =
+                    fragmentActivity
+                            .getSupportFragmentManager();
+
+            FragmentTransaction transaction =
+                    fragmentManager
+                            .beginTransaction();
+
+            transaction.replace(
+                    R.id.fragment_container,
+                    new ItemsFragment()
+            );
+
+            transaction.commit();
+
+        } catch (Exception e) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "تعذر حفظ الصنف: " +
+                            e.getMessage(),
+                    Toast.LENGTH_LONG
+            ).show();
+        }
+    }
+
+    private Item getItemFromForm() {
+
+        String name =
+                String.valueOf(
+                        itemName.getText()
+                ).trim();
+
+        String salePriceText =
+                normalizeNumber(
+                        String.valueOf(
+                                unitPrice.getText()
+                        )
+                );
+
+        String stockText =
+                normalizeNumber(
+                        String.valueOf(
+                                itemStock.getText()
+                        )
+                );
+
+        if (name.isEmpty()) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "أدخل اسم الصنف",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            showStepContent(1);
+
+            return null;
+        }
+
+        if (
+                category.getSelectedItemPosition() <= 0 ||
+                ADD_CATEGORY.equals(
+                        category.getSelectedItem()
+                                .toString()
+                )
+        ) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "اختر قسم الصنف",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            showStepContent(1);
+
+            return null;
+        }
+
+        if (salePriceText.isEmpty()) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "أدخل سعر البيع",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            showStepContent(1);
+
+            return null;
+        }
+
+        if (
+                unitType.getSelectedItemPosition() <= 0
+        ) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "اختر وحدة البيع",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            showStepContent(2);
+
+            return null;
+        }
+
+        if (stockText.isEmpty()) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "أدخل كمية المخزون",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            showStepContent(2);
+
+            return null;
+        }
+
+        try {
+
+            double salePrice =
+                    Double.parseDouble(
+                            salePriceText
+                    );
+
+            int stock =
+                    Integer.parseInt(
+                            stockText
+                    );
+
+            if (salePrice < 0 || stock < 0) {
+                throw new NumberFormatException();
             }
 
-            FirebaseHandler.createItem(newItem, itemImageTemp); // Save data to firebase
+            String purchaseText =
+                    normalizeNumber(
+                            String.valueOf(
+                                    wholesalePrice.getText()
+                            )
+                    );
 
-            Toast.makeText(getContext(), "Item created!", Toast.LENGTH_SHORT).show();
+            String taxText =
+                    normalizeNumber(
+                            String.valueOf(
+                                    itemTax.getText()
+                            )
+                    );
 
-            // Replace Add item fragment with Home Fragment
-            FragmentManager fragmentManager =  fragmentActivity.getSupportFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            double purchasePrice =
+                    purchaseText.isEmpty()
+                            ? 0
+                            : Double.parseDouble(
+                                    purchaseText
+                            );
 
-            ItemsFragment itemsFragment = new ItemsFragment();
-            fragmentTransaction.replace(R.id.fragment_container, itemsFragment); // Replace previous fragment
-            fragmentTransaction.addToBackStack(null); // Add the transaction to the back stack
-            fragmentTransaction.commit();
-        });
+            double tax =
+                    taxText.isEmpty()
+                            ? 0
+                            : Double.parseDouble(
+                                    taxText
+                            );
 
-        skuLayout.setEndIconOnClickListener(v -> {
-            scannerManager.startBarcodeScanning();
-            sku.setText(scannerManager.getScanItem());
-        });
+            return new Item(
+                    name,
+                    salePrice,
+                    category.getSelectedItem()
+                            .toString(),
+                    String.valueOf(
+                            sku.getText()
+                    ).trim(),
+                    unitType.getSelectedItem()
+                            .toString(),
+                    stock,
+                    purchasePrice,
+                    tax,
+                    String.valueOf(
+                            itemDescription.getText()
+                    ).trim()
+            );
+
+        } catch (NumberFormatException e) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "تحقق من السعر والكمية",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return null;
+        }
+    }
+
+    private String normalizeNumber(
+            String value
+    ) {
+
+        if (value == null) {
+            return "";
+        }
+
+        return value
+                .trim()
+                .replace("٠", "0")
+                .replace("١", "1")
+                .replace("٢", "2")
+                .replace("٣", "3")
+                .replace("٤", "4")
+                .replace("٥", "5")
+                .replace("٦", "6")
+                .replace("٧", "7")
+                .replace("٨", "8")
+                .replace("٩", "9")
+                .replace("٫", ".")
+                .replace("٬", "")
+                .replace(",", "");
     }
 
     private void showStepContent(int step) {
-        // Default Color
-        int colorYellow = ContextCompat.getColor(getContext(), R.color.black);
-        int colorGray = ContextCompat.getColor(getContext(), R.color.light_gray);
-        int colorWhite = ContextCompat.getColor(getContext(), R.color.white);
+
+        int active =
+                ContextCompat.getColor(
+                        requireContext(),
+                        R.color.brand_primary
+                );
+
+        int gray =
+                ContextCompat.getColor(
+                        requireContext(),
+                        R.color.light_gray
+                );
+
+        int white =
+                ContextCompat.getColor(
+                        requireContext(),
+                        R.color.white
+                );
 
         if (step < 1) {
             step = 1;
         }
 
-        else if(step > 3) {
+        if (step > 3) {
             step = 3;
         }
 
-        // Set active button background
-        switch (step) {
-            case 1:
-                stepContentContainer.removeAllViews();
-                stepContentContainer.addView(stepOneLayout);
+        currentStep = step;
 
-                currentStep = 1; // Reset currentStep value to one
+        if (step == 1) {
 
-                step1Button.setClickable(false); // Make step1Button not clickable
-                step2Button.setClickable(true); // Make step2Button clickable
-                step3Button.setClickable(true); // Make step3Button clickable
+            stepContentContainer.removeAllViews();
+            stepContentContainer.addView(
+                    stepOneLayout
+            );
 
-                previousButton.setClickable(false); // Make previousButton not clickable
-                nextButton.setClickable(true); // Make nextButton clickable
+            step1Button.setClickable(false);
+            step2Button.setClickable(true);
+            step3Button.setClickable(true);
 
-                // Reset other views colors to gray
-                contactLeft.setBackgroundColor(colorGray);
-                step2Button.setBackgroundTintList(ColorStateList.valueOf(colorGray));
-                stepTwoTextView.setTextColor(colorGray);
-                contactRight.setBackgroundColor(colorGray);
-                step3Button.setBackgroundTintList(ColorStateList.valueOf(colorGray));
-                stepThreeTextView.setTextColor(colorGray);
-                OtherRight.setBackgroundColor(colorGray);
+            previousButton.setClickable(false);
+            nextButton.setClickable(true);
 
-                progressBar.setProgress(33);
+            contactLeft.setBackgroundColor(gray);
 
-                // Reset previous button color
-                previousButton.setBackgroundResource(R.drawable.button_style);
-                previousButton.setBackgroundTintList(ColorStateList.valueOf(colorGray));
-                previousButton.setColorFilter(colorWhite);
+            step2Button.setBackgroundTintList(
+                    ColorStateList.valueOf(gray)
+            );
 
-                // Reset next button color
-                nextButton.setBackgroundResource(R.drawable.button_style);
-                nextButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                saveButton.setVisibility(View.GONE);
-                nextButton.setVisibility(View.VISIBLE);
+            stepTwoTextView.setTextColor(gray);
 
-                break;
-            case 2:
-                stepContentContainer.removeAllViews();
-                stepContentContainer.addView(stepTwoLayout);
+            contactRight.setBackgroundColor(gray);
 
-                currentStep = 2; // Reset currentStep value to two
+            step3Button.setBackgroundTintList(
+                    ColorStateList.valueOf(gray)
+            );
 
-                // Step button clickable
-                step1Button.setClickable(true);
-                step2Button.setClickable(false);
-                step3Button.setClickable(true);
+            stepThreeTextView.setTextColor(gray);
 
-                previousButton.setClickable(true); // Make previousButton to clickable
-                nextButton.setClickable(true); // Make nextButton to clickable
+            otherRight.setBackgroundColor(gray);
 
-                contactLeft.setBackgroundColor(colorYellow);
-                step2Button.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                stepTwoTextView.setTextColor(colorYellow);
+            progressBar.setProgress(33);
 
-                // Reset other views colors to gray
-                contactRight.setBackgroundColor(colorGray);
-                step3Button.setBackgroundTintList(ColorStateList.valueOf(colorGray));
-                stepThreeTextView.setTextColor(colorGray);
-                OtherRight.setBackgroundColor(colorGray);
+            previousButton.setBackgroundResource(
+                    R.drawable.button_style
+            );
 
-                progressBar.setProgress(58);
+            previousButton.setBackgroundTintList(
+                    ColorStateList.valueOf(gray)
+            );
 
-                // Change previous button color
-                previousButton.setBackgroundResource(R.drawable.button_style);
-                previousButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                previousButton.setColorFilter(colorWhite);
+            previousButton.setColorFilter(white);
 
-                // Reset next button color
-                nextButton.setBackgroundResource(R.drawable.button_style);
-                nextButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                saveButton.setVisibility(View.GONE);
-                nextButton.setVisibility(View.VISIBLE);
+            nextButton.setBackgroundResource(
+                    R.drawable.button_style
+            );
 
-                break;
-            case 3:
-                stepContentContainer.removeAllViews();
-                stepContentContainer.addView(stepThreeLayout);
+            nextButton.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
 
-                currentStep = 3; // Reset currentStep value to three
-
-                // Step button clickable
-                step1Button.setClickable(true);
-                step2Button.setClickable(true);
-                step3Button.setClickable(false);
-
-                previousButton.setClickable(true); // Make previousButton to clickable
-                nextButton.setClickable(true);
-
-                contactLeft.setBackgroundColor(colorYellow);
-                step2Button.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                stepTwoTextView.setTextColor(colorYellow);
-                contactRight.setBackgroundColor(colorYellow);
-                step3Button.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                stepThreeTextView.setTextColor(colorYellow);
-                OtherRight.setBackgroundColor(colorYellow);
-
-                progressBar.setProgress(100);
-
-                // Change previous button color
-                previousButton.setBackgroundResource(R.drawable.button_style);
-                previousButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
-                previousButton.setColorFilter(colorWhite);
-
-                nextButton.setVisibility(View.GONE);
-                saveButton.setVisibility(View.VISIBLE);
-
-                break;
+            saveButton.setVisibility(View.GONE);
+            nextButton.setVisibility(View.VISIBLE);
         }
 
-    }
+        else if (step == 2) {
 
-    private Item getItemFromForm() {
-        return new Item(
-                String.valueOf(itemName.getText()).trim(),
-                Double.parseDouble(String.valueOf(unitPrice.getText()).trim()),
-                category.getSelectedItem().toString(),
-                String.valueOf(sku.getText()).trim(),
-                unitType.getSelectedItem().toString(),
-                Integer.parseInt(String.valueOf(itemStock.getText()).trim()),
-                Double.parseDouble(String.valueOf(wholesalePrice.getText()).trim()),
-                Double.parseDouble(String.valueOf(itemTax.getText()).trim()),
-                String.valueOf(itemDescription.getText())
-        );
-    }
+            stepContentContainer.removeAllViews();
+            stepContentContainer.addView(
+                    stepTwoLayout
+            );
 
-    private boolean isImageSame(Drawable currentDrawable, Drawable uploadingDrawable) {
-        if (currentDrawable != null && uploadingDrawable != null) {
-            Bitmap bitmapCurrent = getBitmapFromVectorDrawable(currentDrawable);
-            Bitmap bitmapUploading = getBitmapFromVectorDrawable(uploadingDrawable);
+            step1Button.setClickable(true);
+            step2Button.setClickable(false);
+            step3Button.setClickable(true);
 
-            return bitmapCurrent.sameAs(bitmapUploading);
+            previousButton.setClickable(true);
+            nextButton.setClickable(true);
+
+            contactLeft.setBackgroundColor(active);
+
+            step2Button.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
+
+            stepTwoTextView.setTextColor(active);
+
+            contactRight.setBackgroundColor(gray);
+
+            step3Button.setBackgroundTintList(
+                    ColorStateList.valueOf(gray)
+            );
+
+            stepThreeTextView.setTextColor(gray);
+
+            otherRight.setBackgroundColor(gray);
+
+            progressBar.setProgress(66);
+
+            previousButton.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
+
+            previousButton.setColorFilter(white);
+
+            nextButton.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
+
+            saveButton.setVisibility(View.GONE);
+            nextButton.setVisibility(View.VISIBLE);
         }
 
-        return false;
+        else {
+
+            stepContentContainer.removeAllViews();
+            stepContentContainer.addView(
+                    stepThreeLayout
+            );
+
+            step1Button.setClickable(true);
+            step2Button.setClickable(true);
+            step3Button.setClickable(false);
+
+            previousButton.setClickable(true);
+
+            contactLeft.setBackgroundColor(active);
+            contactRight.setBackgroundColor(active);
+
+            step2Button.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
+
+            stepTwoTextView.setTextColor(active);
+
+            step3Button.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
+
+            stepThreeTextView.setTextColor(active);
+
+            otherRight.setBackgroundColor(active);
+
+            progressBar.setProgress(100);
+
+            previousButton.setBackgroundTintList(
+                    ColorStateList.valueOf(active)
+            );
+
+            previousButton.setColorFilter(white);
+
+            nextButton.setVisibility(View.GONE);
+            saveButton.setVisibility(View.VISIBLE);
+        }
     }
 
-    private Bitmap getBitmapFromVectorDrawable(Drawable drawable) {
+    private boolean isImageSame(
+            Drawable currentDrawable,
+            Drawable uploadingDrawable
+    ) {
+
+        try {
+
+            Bitmap current =
+                    getBitmapFromDrawable(
+                            currentDrawable
+                    );
+
+            Bitmap uploading =
+                    getBitmapFromDrawable(
+                            uploadingDrawable
+                    );
+
+            return current.sameAs(uploading);
+
+        } catch (Exception e) {
+
+            return false;
+        }
+    }
+
+    private Bitmap getBitmapFromDrawable(
+            Drawable drawable
+    ) {
+
         if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        } else if (drawable instanceof VectorDrawable) {
-            Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                    drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-            drawable.draw(canvas);
-            return bitmap;
-        } else {
-            throw new IllegalArgumentException("unsupported drawable type");
-        }
-    }
 
+            return ((BitmapDrawable) drawable)
+                    .getBitmap();
+        }
+
+        if (drawable instanceof VectorDrawable) {
+
+            Bitmap bitmap =
+                    Bitmap.createBitmap(
+                            Math.max(
+                                    1,
+                                    drawable.getIntrinsicWidth()
+                            ),
+                            Math.max(
+                                    1,
+                                    drawable.getIntrinsicHeight()
+                            ),
+                            Bitmap.Config.ARGB_8888
+                    );
+
+            Canvas canvas =
+                    new Canvas(bitmap);
+
+            drawable.setBounds(
+                    0,
+                    0,
+                    canvas.getWidth(),
+                    canvas.getHeight()
+            );
+
+            drawable.draw(canvas);
+
+            return bitmap;
+        }
+
+        Bitmap bitmap =
+                Bitmap.createBitmap(
+                        100,
+                        100,
+                        Bitmap.Config.ARGB_8888
+                );
+
+        Canvas canvas =
+                new Canvas(bitmap);
+
+        drawable.setBounds(
+                0,
+                0,
+                canvas.getWidth(),
+                canvas.getHeight()
+        );
+
+        drawable.draw(canvas);
+
+        return bitmap;
+    }
 }

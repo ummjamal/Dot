@@ -18,82 +18,163 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.module.dot.data.local.ItemDatabase;
-import com.module.dot.view.MainActivity;
-import com.module.dot.data.remote.FirebaseHandler;
 import com.module.dot.R;
+import com.module.dot.data.local.ItemDatabase;
 import com.module.dot.model.Item;
+import com.module.dot.view.MainActivity;
 import com.module.dot.view.adapters.ItemAdapter;
 
 import java.util.ArrayList;
-import java.util.Objects;
-
 
 public class ItemsFragment extends Fragment {
+
     private FragmentActivity fragmentActivity;
 
-    // Hold data from the database
-    private final ArrayList<Item> itemList = new ArrayList<>();
+    private final ArrayList<Item> itemList =
+            new ArrayList<>();
 
+    @Override
+    public void onAttach(
+            @NonNull Context context
+    ) {
 
-    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        fragmentActivity = (FragmentActivity) context;
+
+        fragmentActivity =
+                (FragmentActivity) context;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_items, container, false);
+    public View onCreateView(
+            LayoutInflater inflater,
+            ViewGroup container,
+            Bundle savedInstanceState
+    ) {
+
+        return inflater.inflate(
+                R.layout.fragment_items,
+                container,
+                false
+        );
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onViewCreated(
+            @NonNull View view,
+            @Nullable Bundle savedInstanceState
+    ) {
 
-        LinearLayout noData = view.findViewById(R.id.noDataItemFragmentLL); // When Database is empty
-        RecyclerView recyclerView = view.findViewById(R.id.itemList);
-//        GridView itemGridview = view.findViewById(R.id.itemList); // When list of item will show
-        FloatingActionButton addItem = view.findViewById(R.id.addButton); // Add Item floating button
+        super.onViewCreated(
+                view,
+                savedInstanceState
+        );
 
-        FirebaseHandler.readItem("items", getContext());
+        LinearLayout noData =
+                view.findViewById(
+                        R.id.noDataItemFragmentLL
+                );
 
+        RecyclerView recyclerView =
+                view.findViewById(
+                        R.id.itemList
+                );
 
-        try (ItemDatabase itemDatabase = new ItemDatabase(getContext())) {
-            if (itemDatabase.isTableEmpty("items")) {
-                itemDatabase.showEmptyStateMessage(recyclerView, noData);
+        FloatingActionButton addItem =
+                view.findViewById(
+                        R.id.addButton
+                );
+
+        itemList.clear();
+
+        try (ItemDatabase itemDatabase =
+                     new ItemDatabase(
+                             requireContext()
+                     )) {
+
+            if (
+                    itemDatabase.isTableEmpty(
+                            "items"
+                    )
+            ) {
+
+                itemDatabase.showEmptyStateMessage(
+                        recyclerView,
+                        noData
+                );
+
             } else {
-                itemDatabase.showStateMessage(recyclerView, noData);
 
-                itemDatabase.readItem(itemList); // Read data from database and save it the arraylist
+                itemDatabase.showStateMessage(
+                        recyclerView,
+                        noData
+                );
+
+                itemDatabase.readItem(
+                        itemList
+                );
             }
+
         } catch (Exception e) {
-            Log.i("UserFragment", Objects.requireNonNull(e.getMessage()));
+
+            Log.e(
+                    "ItemsFragment",
+                    "Error loading items",
+                    e
+            );
         }
 
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
-        recyclerView.setAdapter(new ItemAdapter(itemList, getContext()));
+        recyclerView.setLayoutManager(
+                new GridLayoutManager(
+                        requireContext(),
+                        2
+                )
+        );
 
-//        // Initialize adapter with the arrays
-//        ItemGridAdapter adapter = new ItemGridAdapter(itemList, getContext());
-//
-//        itemGridview.setAdapter(adapter);
+        recyclerView.setAdapter(
+                new ItemAdapter(
+                        itemList,
+                        requireContext()
+                )
+        );
 
-//        itemGridview.setOnItemClickListener((parent, view12, position, id) -> Toast.makeText(getContext(), "You selected " + itemList.get(position).getName(), Toast.LENGTH_SHORT).show());
+        boolean isAdmin =
+                MainActivity.currentUser == null ||
+                "Administrator".equalsIgnoreCase(
+                        MainActivity.currentUser
+                                .getPositionTitle()
+                );
 
-        if(!Objects.equals(MainActivity.currentUser.getPositionTitle(), "Administrator")){
-            addItem.setVisibility(View.GONE);
-        }
+        addItem.setVisibility(
+                isAdmin
+                        ? View.VISIBLE
+                        : View.GONE
+        );
 
-        addItem.setOnClickListener(view1 -> showFragment(new NewItemFragment()));
+        addItem.setOnClickListener(
+                v -> showFragment(
+                        new NewItemFragment()
+                )
+        );
     }
 
-    private void showFragment(Fragment fragment) {
-        FragmentManager fragmentManager = fragmentActivity.getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    private void showFragment(
+            Fragment fragment
+    ) {
 
-        fragmentTransaction.replace(R.id.fragment_container, fragment);
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
+        FragmentManager manager =
+                fragmentActivity
+                        .getSupportFragmentManager();
+
+        FragmentTransaction transaction =
+                manager.beginTransaction();
+
+        transaction.replace(
+                R.id.fragment_container,
+                fragment
+        );
+
+        transaction.addToBackStack(null);
+
+        transaction.commit();
     }
 }

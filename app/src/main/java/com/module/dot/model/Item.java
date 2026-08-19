@@ -1,10 +1,7 @@
 package com.module.dot.model;
 
-/*
- Created by Wiscarlens Lucius on 3 JUne 2023.
- */
-
 public class Item {
+
     private String globalID;
     private Long localID;
     private String creatorID;
@@ -18,17 +15,21 @@ public class Item {
     private double wholesalePrice;
     private Double tax;
     private String description;
-
     private Long quantity = 1L;
 
-    public Item() {
+    public Item() {}
 
-
-    }
-
-    // Use for add item to database
-    public Item(String name, double price, String category, String sku,
-                String unitType, int stock, double wholesalePrice, double tax, String description) {
+    public Item(
+            String name,
+            double price,
+            String category,
+            String sku,
+            String unitType,
+            int stock,
+            double wholesalePrice,
+            double tax,
+            String description
+    ) {
         this.name = name;
         this.price = price;
         this.category = category;
@@ -40,8 +41,16 @@ public class Item {
         this.description = description;
     }
 
-    // Use for display item in the gridview
-    public Item(long localID, String globalID, String imagePath, String name,  double price, Double tax, String SKU, String unitType) {
+    public Item(
+            long localID,
+            String globalID,
+            String imagePath,
+            String name,
+            double price,
+            Double tax,
+            String SKU,
+            String unitType
+    ) {
         this.localID = localID;
         this.globalID = globalID;
         this.imagePath = imagePath;
@@ -52,8 +61,14 @@ public class Item {
         this.unitType = unitType;
     }
 
-    // Selected Item
-    public Item(String globalID, String name, double price, Double tax, String SKU, Long quantity) {
+    public Item(
+            String globalID,
+            String name,
+            double price,
+            Double tax,
+            String SKU,
+            Long quantity
+    ) {
         this.globalID = globalID;
         this.name = name;
         this.price = price;
@@ -62,8 +77,13 @@ public class Item {
         this.quantity = quantity;
     }
 
-    // Use for display order item
-    public Item(String globalID, String imagePath, String name, double price, Long quantity) {
+    public Item(
+            String globalID,
+            String imagePath,
+            String name,
+            double price,
+            Long quantity
+    ) {
         this.globalID = globalID;
         this.imagePath = imagePath;
         this.name = name;
@@ -110,7 +130,7 @@ public class Item {
     }
 
     public String getName() {
-        return name;
+        return name == null ? "" : name;
     }
 
     public void setName(String name) {
@@ -118,7 +138,7 @@ public class Item {
     }
 
     public double getPrice() {
-        return price;
+        return price == null ? 0.0 : price;
     }
 
     public void setPrice(double price) {
@@ -126,7 +146,7 @@ public class Item {
     }
 
     public String getCategory() {
-        return category;
+        return category == null ? "" : category;
     }
 
     public void setCategory(String category) {
@@ -134,7 +154,7 @@ public class Item {
     }
 
     public String getSku() {
-        return sku;
+        return sku == null ? "" : sku;
     }
 
     public void setSku(String sku) {
@@ -142,7 +162,7 @@ public class Item {
     }
 
     public String getUnitType() {
-        return unitType;
+        return unitType == null ? "" : unitType;
     }
 
     public void setUnitType(String unitType) {
@@ -154,7 +174,7 @@ public class Item {
     }
 
     public void setStock(int stock) {
-        this.stock = stock;
+        this.stock = Math.max(stock, 0);
     }
 
     public double getWholesalePrice() {
@@ -162,19 +182,19 @@ public class Item {
     }
 
     public void setWholesalePrice(double wholesalePrice) {
-        this.wholesalePrice = wholesalePrice;
+        this.wholesalePrice = Math.max(wholesalePrice, 0);
     }
 
     public double getTax() {
-        return tax;
+        return tax == null ? 0.0 : tax;
     }
 
     public void setTax(Double tax) {
-        this.tax = tax;
+        this.tax = tax == null ? 0.0 : tax;
     }
 
     public String getDescription() {
-        return description;
+        return description == null ? "" : description;
     }
 
     public void setDescription(String description) {
@@ -182,10 +202,18 @@ public class Item {
     }
 
     public Long getQuantity() {
-        return quantity;
+        return quantity == null ? 1L : quantity;
     }
 
     public void setQuantity(Long quantity) {
-        this.quantity = quantity;
+        this.quantity = quantity == null || quantity < 1 ? 1L : quantity;
+    }
+
+    public boolean isAvailable() {
+        return stock > 0;
+    }
+
+    public double getEstimatedProfitPerUnit() {
+        return Math.max(0, getPrice() - wholesalePrice);
     }
 }
