@@ -1,0 +1,2309 @@
+========== APP BUILD.GRADLE ==========
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.appdistribution'
+    id 'com.google.firebase.crashlytics'
+}
+
+android {
+    namespace 'com.module.dot'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.module.dot"
+        minSdk 24
+        targetSdk 34
+        versionCode 5
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.navigation:navigation-fragment:2.7.7'
+    implementation 'androidx.navigation:navigation-ui:2.7.7'
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation 'com.google.firebase:firebase-auth:23.0.0'
+    implementation 'com.google.firebase:firebase-database:21.0.0'
+    implementation 'com.google.android.recaptcha:recaptcha:18.5.1'
+    implementation 'com.google.firebase:firebase-storage:21.0.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.google.firebase:firebase-crashlytics:19.0.1'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation 'de.hdodenhof:circleimageview:3.1.0' // Circular ImageView
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0' // For barcode Scanner
+    implementation ("org.mindrot:jbcrypt:0.4") // For password encryption
+    implementation 'com.airbnb.android:lottie:6.1.0'  // Lottie Animation
+
+}========== MANIFEST ==========
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <application
+        android:name=".DotApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Dot"
+        tools:targetApi="31">
+        <activity
+            android:name=".view.MainActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.CaptureAct"
+            android:stateNotNeeded="true"
+            android:theme="@style/zxing_CaptureTheme"/>
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
+
+    </application>
+
+</manifest>========== STRINGS ==========
+<resources>
+    <string name="app_name">dot.</string>
+    <string name="logo">Logo</string>
+    <string name="log_in_to_your_account">Log in to your account</string>
+    <string name="email">Email</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="confirm">Confirm</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="confirm_logout">Are you sure you want to logout?</string>
+    <string name="confirm_checkout">Are you sure you want to checkout?</string>
+    <string name="remember_me">Remember me</string>
+    <string name="forgot_your_password">Forgot password?</string>
+    <string name="required">Required</string>
+    <string name="invalid_email"> Email not formatted correctly. </string>
+    <string name="hello_blank_fragment">Home Page</string>
+    <string name="finance">Finance</string>
+    <string name="add">Add</string>
+    <string name="leads">Leads</string>
+    <string name="home">Home</string>
+    <string name="users">Users</string>
+    <string name="transaction">Transactions</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+    <string name="logout">Logout</string>
+    <string name="navigation_drawer_close">Close Navigation</string>
+    <string name="navigation_drawer_open">Open Navigation</string>
+    <string name="saving">Saving…</string>
+    <string name="create_item">Create Item</string>
+    <string name="name">Name</string>
+    <string name="category">Category</string>
+    <string name="options">Options</string>
+    <string name="sku">SKU</string>
+    <string name="unit_type">Unit Type</string>
+    <string name="price">Price</string>
+    <string name="save">Save</string>
+    <string name="new_user">New User</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="fullname">Full NAME</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="field_empty">This field cannot be empty</string>
+    <string name="password_empty">Password cannot be empty</string>
+    <string name="email_empty"> Email cannot be empty</string>
+    <string name="empty_cart">Your cart is empty!</string>
+    <string name="valid_email"> Please enter a valid email</string>
+    <string name="password_not_same">Password are not the same</string>
+    <string name="login_successful">Login Successful</string>
+    <string name="login_failed">Login Failed</string>
+    <string name="signup_Successful">Signup Successful</string>
+    <string name="signup_failed">Signup Failed</string>
+    <string name="no_internet">No Internet</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="position">Position</string>
+    <string name="scanner_barcode">Barcode Scanner</string>
+    <string name="new_item">New Item</string>
+    <string name="default_charge">$ 0.00</string>
+    <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">NO</string>
+    <string name="current_sales">Current Sales</string>
+    <string name="product_name">Product Name</string>
+    <string name="total_unit">x</string>
+    <string name="add_new_user">Add New User</string>
+    <string name="slider">slider</string>
+    <string name="checkout">Checkout</string>
+    <string name="total">Total</string>
+    <string name="One">1</string>
+    <string name="zero_dollar">0.00</string>
+    <string name="dollar_sign">$</string>
+    <string name="receipt">Receipt</string>
+    <string name="start_a_new_sale">Start a new sale</string>
+    <string name="done">Done</string>
+    <string name="transaction_confirmation">Transaction Confirmation</string>
+    <string name="Street_Name_Sample">12 Main st</string>
+    <string name="city_st_zipcode">City, ST 00000</string>
+    <string name="date_sample">06–15–2023</string>
+    <string name="time_sample">3:55:32 PM</string>
+    <string name="transaction_id_sample">ABC12345678912334567</string>
+    <string name="cart">Cart</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="tax">Tax</string>
+    <string name="pending">PENDING</string>
+    <string name="print">Print</string>
+    <string name="share">Share</string>
+    <string name="barcode">Barcode</string>
+    <string name="payment_type">Payment Type</string>
+    <string name="step1button">Step1Button</string>
+    <string name="step2button">step2Button</string>
+    <string name="step3button">step3Button</string>
+    <string name="previousButton">previousButton</string>
+    <string name="nextButton">nextButton</string>
+    <string name="create_a_new_user">CREATE A NEW USER</string>
+    <string name="account">Account</string>
+    <string name="personal">Personal</string>
+    <string name="success">Success</string>
+    <string name="contact">Contact</string>
+    <string name="other">Other</string>
+    <string name="personal_information">Personal Information:</string>
+    <string name="middle_name">Middle Name</string>
+    <string name="gender">Gender</string>
+    <string name="new_user_profile">New User Profile Picture</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="street_name">Street Name</string>
+    <string name="state">State</string>
+    <string name="zip_code">Zip Code</string>
+    <string name="contact_information">Contact Information:</string>
+    <string name="city">City</string>
+    <string name="add_new_item">ADD NEW ITEM</string>
+    <string name="product">Product</string>
+    <string name="details">Details</string>
+    <string name="product_information">Product Information:</string>
+    <string name="new_item_image">New Item Image</string>
+    <string name="product_category">Product Category</string>
+    <string name="unit_price">Unit Price</string>
+    <string name="product_details">Product Details:</string>
+    <string name="unit">Unit</string>
+    <string name="stock">Stock</string>
+    <string name="product_price">Product Price:</string>
+    <string name="wholesales_price">Wholesales Price</string>
+    <string name="item_name">Item Name</string>
+    <string name="no_items">No Items</string>
+    <string name="no_data_message">Show when there is no data</string>
+    <string name="no_users">No Users</string>
+    <string name="description">Description</string>
+    <string name="orders">Orders</string>
+    <string name="no_orders">No Orders Yet</string>
+    <string name="order_number">00000</string>
+    <string name="pound">#</string>
+    <string name="status">Status</string>
+    <string name="completed">Completed</string>
+    <string name="bar">|</string>
+    <string name="item"> Items</string>
+    <string name="zero">0</string>
+    <string name="no_transactions">No Transactions</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="create_account">Create Account</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="forgot_password_message">Enter the email you used to sign up to reset your password.</string>
+    <string name="close_button">Close Button</string>
+    <string name="john_doe">John Doe</string>
+    <string name="johndoe_gmail_com">johndoe@gmail.com</string>
+    <string name="address">Address</string>
+    <string name="default_initial">J</string>
+    <string name="image_header">Image Header</string>
+    <string name="company_name">Company Name</string>
+    <string name="empty_database">No item in database</string>
+    <string name="payment_successful">Payment Successful</string>
+    <string name="agree_with">Agree with </string>
+    <string name="terms_conditions">Terms &amp; Conditions</string>
+    <string name="terms_of_service_filler">
+        <b>1. Terms</b> \n\nLorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. \n \n
+        <b>2. Why do we use it?</b> \n\nIt is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using \'Content here, content here\', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for \'lorem ipsum\' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).\n\n
+        <b>3. Where does it come from?</b>\n\nContrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.\n\nThe standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from \"de Finibus Bonorum et Malorum\" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.\n
+    </string>
+
+</resources>========== NIGHT STRINGS ==========
+<resources>
+    <string name="app_name">dot.</string>
+    <string name="logo">Logo</string>
+    <string name="log_in_to_your_account">Log in to your account</string>
+    <string name="email">Email</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="confirm">Confirm</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="confirm_logout">Are you sure you want to logout?</string>
+    <string name="confirm_checkout">Are you sure you want to checkout?</string>
+    <string name="remember_me">Remember me</string>
+    <string name="forgot_your_password">Forgot password?</string>
+    <string name="required">Required</string>
+    <string name="invalid_email"> Email not formatted correctly. </string>
+    <string name="hello_blank_fragment">Home Page</string>
+    <string name="finance">Finance</string>
+    <string name="add">Add</string>
+    <string name="leads">Leads</string>
+    <string name="home">Home</string>
+    <string name="users">Users</string>
+    <string name="transaction">Transactions</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="item">Items</string>
+    <string name="profile">Profile</string>
+    <string name="settings">Settings</string>
+    <string name="logout">Logout</string>
+    <string name="navigation_drawer_close">Close Navigation</string>
+    <string name="navigation_drawer_open">Open Navigation</string>
+    <string name="saving">Saving…</string>
+    <string name="create_item">Create Item</string>
+    <string name="name">Name</string>
+    <string name="category">Category</string>
+    <string name="options">Options</string>
+    <string name="sku">SKU</string>
+    <string name="unit_type">Unit Type</string>
+    <string name="price">Price</string>
+    <string name="save">Save</string>
+    <string name="new_user">New User</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="fullname">Full NAME</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="field_empty">This field cannot be empty</string>
+    <string name="password_empty">Password cannot be empty</string>
+    <string name="email_empty"> Email cannot be empty</string>
+    <string name="empty_cart">Your cart is empty!</string>
+    <string name="valid_email"> Please enter a valid email</string>
+    <string name="password_not_same">Password are not the same</string>
+    <string name="login_successful">Login Successful</string>
+    <string name="login_failed">Login Failed</string>
+    <string name="signup_Successful">Signup Successful</string>
+    <string name="signup_failed">Signup Failed</string>
+    <string name="no_internet">No Internet</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="position">Position</string>
+    <string name="scanner_barcode">Barcode Scanner</string>
+    <string name="new_item">New Item</string>
+    <string name="default_charge">$ 0.00</string>
+    <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">NO</string>
+    <string name="current_sales">Current Sales</string>
+    <string name="product_name">Product Name</string>
+    <string name="total_unit">x</string>
+    <string name="add_new_user">Add New User</string>
+    <string name="slider">slider</string>
+    <string name="checkout">Checkout</string>
+    <string name="total">Total</string>
+    <string name="One">1</string>
+    <string name="zero_dollar">0.00</string>
+    <string name="dollar_sign">$</string>
+    <string name="receipt">Receipt</string>
+    <string name="start_a_new_sale">Start a new sale</string>
+    <string name="done">Done</string>
+    <string name="transaction_confirmation">Transaction Confirmation</string>
+    <string name="Street_Name_Sample">12 Main st</string>
+    <string name="city_st_zipcode">City, ST 00000</string>
+    <string name="date_sample">06–15–2023</string>
+    <string name="time_sample">3:55:32 PM</string>
+    <string name="transaction_id_sample">ABC12345678912334567</string>
+    <string name="cart">Cart</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="tax">Tax</string>
+    <string name="pending">PENDING</string>
+    <string name="print">Print</string>
+    <string name="share">Share</string>
+    <string name="barcode">Barcode</string>
+    <string name="payment_type">Payment Type</string>
+    <string name="step1button">Step1Button</string>
+    <string name="step2button">step2Button</string>
+    <string name="step3button">step3Button</string>
+    <string name="previousButton">previousButton</string>
+    <string name="nextButton">nextButton</string>
+    <string name="create_a_new_user">CREATE A NEW USER</string>
+    <string name="account">Account</string>
+    <string name="personal">Personal</string>
+    <string name="success">Success</string>
+    <string name="contact">Contact</string>
+    <string name="other">Other</string>
+    <string name="personal_information">Personal Information:</string>
+    <string name="middle_name">Middle Name</string>
+    <string name="gender">Gender</string>
+    <string name="new_user_profile">New User Profile Picture</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="street_name">Street Name</string>
+    <string name="state">State</string>
+    <string name="zip_code">Zip Code</string>
+    <string name="contact_information">Contact Information:</string>
+    <string name="city">City</string>
+    <string name="add_new_item">ADD NEW ITEM</string>
+    <string name="product">Product</string>
+    <string name="details">Details</string>
+    <string name="product_information">Product Information:</string>
+    <string name="new_item_image">New Item Image</string>
+    <string name="product_category">Product Category</string>
+    <string name="unit_price">Unit Price</string>
+    <string name="product_details">Product Details:</string>
+    <string name="unit">Unit</string>
+    <string name="stock">Stock</string>
+    <string name="product_price">Product Price:</string>
+    <string name="wholesales_price">Wholesales Price</string>
+    <string name="item_name">Item Name</string>
+    <string name="no_items">No Items</string>
+    <string name="no_data_message">Show when there is no data</string>
+    <string name="no_users">No Users</string>
+    <string name="description">Description</string>
+    <string name="orders">Orders</string>
+    <string name="no_orders">No Orders Yet</string>
+    <string name="order_number">00000</string>
+    <string name="pound">#</string>
+    <string name="status">Status</string>
+    <string name="completed">Completed</string>
+    <string name="bar">|</string>
+    <string name="zero">0</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="create_account">Create Account</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="forgot_password_message">Enter the email you used to sign up to reset your password.</string>
+    <string name="close_button">Close Button</string>
+    <string name="john_doe">John Doe</string>
+    <string name="johndoe_gmail_com">johndoe@gmail.com</string>
+    <string name="address">Address</string>
+    <string name="default_initial">J</string>
+    <string name="image_header">Image Header</string>
+    <string name="company_name">Company Name</string>
+
+</resources>========== COLORS ==========
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="pink_gold">#fbefea</color>
+    <color name="dark_yellow">#FFED9B11</color>
+    <color name="red">#FF0000</color>
+    <color name="light_blue">#80BDFF</color>
+    <color name="gray">#F6F7FA</color>
+    <color name="light_gray">#DCDDDF</color>
+    <color name="dark_gray">#595959</color>
+    <color name="blue_AF">#143d59</color>
+    <color name="state_blue">#5b7c99</color>
+    <color name="gold">#947A42</color>
+    <color name="green">#30C81F</color>
+
+</resources>========== THEME ==========
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.Dot" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryVariant">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/black</item>
+        <item name="colorSecondaryVariant">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorHint">@color/light_gray</item>
+    </style>
+
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/slide_in_animation</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_animation</item>
+    </style>
+
+    <style name="roundedImageViewRounded">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!--    Make the progress bar thicker-->
+    <style name="CustomProgressBar" parent="Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:progressDrawable">@drawable/custom_progress_bar</item>
+    </style>
+
+</resources>
+========== NAV MENU ==========
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/baseline_home_24"
+            android:title="@string/home"/>
+
+        <item
+            android:id="@+id/nav_users"
+            android:icon="@drawable/baseline_users_alt_24"
+            android:title="@string/users"/>
+
+        <item
+            android:id="@+id/nav_items"
+            android:icon="@drawable/baseline_sell_24"
+            android:title="@string/item"/>
+
+        <item
+            android:id="@+id/nav_orders"
+            android:icon="@drawable/baseline_shopping_bag_24"
+            android:title="@string/orders"/>
+
+        <item
+            android:id="@+id/nav_transactions"
+            android:icon="@drawable/baseline_compare_arrows_24"
+            android:title="@string/transaction"/>
+
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/baseline_settings_24"
+            android:title="@string/settings"/>
+
+    </group>
+
+
+    <item
+        android:title="">
+
+        <menu>
+
+            <group android:checkableBehavior="single">
+
+                <item
+                    android:id="@+id/nav_logout"
+                    android:icon="@drawable/baseline_logout_24"
+                    android:title="@string/logout"/>
+
+            </group>
+        </menu>
+
+    </item>
+
+</menu>========== ITEM MODEL ==========
+package com.module.dot.model;
+
+/*
+ Created by Wiscarlens Lucius on 3 JUne 2023.
+ */
+
+public class Item {
+    private String globalID;
+    private Long localID;
+    private String creatorID;
+    private String imagePath;
+    private String name;
+    private Double price;
+    private String category;
+    private String sku;
+    private String unitType;
+    private int stock;
+    private double wholesalePrice;
+    private Double tax;
+    private String description;
+
+    private Long quantity = 1L;
+
+    public Item() {
+
+
+    }
+
+    // Use for add item to database
+    public Item(String name, double price, String category, String sku,
+                String unitType, int stock, double wholesalePrice, double tax, String description) {
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.sku = sku;
+        this.unitType = unitType;
+        this.stock = stock;
+        this.wholesalePrice = wholesalePrice;
+        this.tax = tax;
+        this.description = description;
+    }
+
+    // Use for display item in the gridview
+    public Item(long localID, String globalID, String imagePath, String name,  double price, Double tax, String SKU, String unitType) {
+        this.localID = localID;
+        this.globalID = globalID;
+        this.imagePath = imagePath;
+        this.name = name;
+        this.price = price;
+        this.tax = tax;
+        this.sku = SKU;
+        this.unitType = unitType;
+    }
+
+    // Selected Item
+    public Item(String globalID, String name, double price, Double tax, String SKU, Long quantity) {
+        this.globalID = globalID;
+        this.name = name;
+        this.price = price;
+        this.tax = tax;
+        this.sku = SKU;
+        this.quantity = quantity;
+    }
+
+    // Use for display order item
+    public Item(String globalID, String imagePath, String name, double price, Long quantity) {
+        this.globalID = globalID;
+        this.imagePath = imagePath;
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    public Item(String globalID, Double price, Long quantity) {
+        this.globalID = globalID;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    public String getGlobalID() {
+        return globalID;
+    }
+
+    public void setGlobalID(String globalID) {
+        this.globalID = globalID;
+    }
+
+    public Long getLocalID() {
+        return localID;
+    }
+
+    public void setLocalID(Long localID) {
+        this.localID = localID;
+    }
+
+    public String getCreatorID() {
+        return creatorID;
+    }
+
+    public void setCreatorID(String creatorID) {
+        this.creatorID = creatorID;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public String getUnitType() {
+        return unitType;
+    }
+
+    public void setUnitType(String unitType) {
+        this.unitType = unitType;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public double getWholesalePrice() {
+        return wholesalePrice;
+    }
+
+    public void setWholesalePrice(double wholesalePrice) {
+        this.wholesalePrice = wholesalePrice;
+    }
+
+    public double getTax() {
+        return tax;
+    }
+
+    public void setTax(Double tax) {
+        this.tax = tax;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Long getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Long quantity) {
+        this.quantity = quantity;
+    }
+}
+========== ITEM DATABASE ==========
+package com.module.dot.data.local;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
+
+import com.module.dot.model.Item;
+
+import java.util.ArrayList;
+
+public class ItemDatabase extends MyDatabaseManager {
+    private static final String NAME_TABLE_ITEMS = "items";
+    private static final String ID_COLUMN_ITEMS = "_id";
+    private static final String GLOBAL_ID_COLUMN_ITEMS = "global_id";
+    private static final String IMAGE_COLUMN_ITEMS = "image";
+    private static final String NAME_COLUMN_ITEMS = "name";
+    private static final String PRICE_COLUMN_ITEMS = "price";
+    private static final String CATEGORY_ID_COLUMN_ITEMS = "category_id";
+    private static final String SKU_COLUMN_ITEMS = "sku";
+    private static final String UNIT_TYPE_COLUMN_ITEMS = "unit_type";
+    private static final String STOCK_QUANTITY_COLUMN_ITEMS = "stock_quantity";
+    private static final String WS_PRICE_COLUMN_ITEMS = "wholesales_price";
+    private static final String TAX_COLUMN_ITEMS = "tax";
+    private static final String DESCRIPTION_COLUMN_ITEMS = "description";
+    private static final String CREATED_DATE_COLUMN_ITEMS = "create_date";
+
+    public ItemDatabase(@Nullable Context context) {
+        super(context);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+
+    protected void createTable(SQLiteDatabase db) {
+        // SQL query to create the "items" table
+        String query_items = "CREATE TABLE " + NAME_TABLE_ITEMS +
+                " (" + ID_COLUMN_ITEMS + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                GLOBAL_ID_COLUMN_ITEMS + " TEXT NOT NULL UNIQUE, " +
+                IMAGE_COLUMN_ITEMS + " TEXT, " +
+                NAME_COLUMN_ITEMS + " TEXT NOT NULL, " +
+                PRICE_COLUMN_ITEMS + " REAL NOT NULL, " +
+                CATEGORY_ID_COLUMN_ITEMS + " TEXT, " +  // TODO: Foreign key to a future table call category
+                SKU_COLUMN_ITEMS + " TEXT, " +
+                UNIT_TYPE_COLUMN_ITEMS + " TEXT, " +
+                STOCK_QUANTITY_COLUMN_ITEMS + " INTEGER, " +
+                WS_PRICE_COLUMN_ITEMS + " REAL, " +
+                TAX_COLUMN_ITEMS + " REAL, " +
+                DESCRIPTION_COLUMN_ITEMS + " TEXT, " +
+                CREATED_DATE_COLUMN_ITEMS + " DATETIME DEFAULT CURRENT_TIMESTAMP);";
+
+        // Execute the SQL query
+        db.execSQL(query_items);
+
+        Log.i("ItemDatabase", "Creating items table...");
+
+    }
+
+    /**
+     * Inserts a new item into the database if the specified column value does not exist.
+     *
+     * @param newItem     The item object containing information to be added.
+     * @throws SQLiteException If there is an issue with the SQLite database operations.
+     */
+    public void createItem(Item newItem) throws SQLiteException {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            // Check if the specified column value already exists in the database
+            if (!isValueExists(db, NAME_TABLE_ITEMS, GLOBAL_ID_COLUMN_ITEMS, newItem.getGlobalID())) {
+                ContentValues cv = new ContentValues();
+
+                cv.put(GLOBAL_ID_COLUMN_ITEMS, newItem.getGlobalID());
+                cv.put(IMAGE_COLUMN_ITEMS, newItem.getImagePath());
+                cv.put(NAME_COLUMN_ITEMS, newItem.getName());
+                cv.put(PRICE_COLUMN_ITEMS, newItem.getPrice());
+                cv.put(CATEGORY_ID_COLUMN_ITEMS, newItem.getCategory());
+                cv.put(SKU_COLUMN_ITEMS, newItem.getSku());
+                cv.put(UNIT_TYPE_COLUMN_ITEMS, newItem.getUnitType());
+                cv.put(STOCK_QUANTITY_COLUMN_ITEMS, newItem.getStock());
+                cv.put(WS_PRICE_COLUMN_ITEMS, newItem.getWholesalePrice());
+                cv.put(TAX_COLUMN_ITEMS, newItem.getTax());
+                cv.put(DESCRIPTION_COLUMN_ITEMS, newItem.getDescription());
+
+                long result = db.insertOrThrow(NAME_TABLE_ITEMS, null, cv);
+
+                if (result != -1) {
+                    Log.i("MyDatabaseManager", "Item Added Successfully!");
+                }
+            } else {
+                Log.i("MyDatabaseManager", "Item with specified value already exists in the column!");
+            }
+        } catch (SQLiteException e) {
+            Log.e("MyDatabaseManager", "Failed to add item: " + e.getMessage());
+            throw e;
+        }
+    }
+
+
+
+    /**
+     * Populates an ArrayList with item data from the database.
+     *
+     * @param itemList The ArrayList to store Item objects for display.
+     */
+    public void readItem(ArrayList<Item> itemList) {
+        // Get a cursor to the item data in the database
+        Cursor cursor = super.readAllData(NAME_TABLE_ITEMS);
+
+        try {
+            // If the database is not empty, populate the arrays with the item data
+            while (cursor.moveToNext()) {
+
+                Item item = new Item(
+                        cursor.getLong(0),      // local id
+                        cursor.getString(1),    // global id
+                        cursor.getString(2),    // imagePath
+                        cursor.getString(3),    // name
+                        cursor.getDouble(4),    // price
+                        cursor.getDouble(10),    // tax
+                        cursor.getString(6),    // SKU
+                        cursor.getString(7)     // unitType
+                );
+
+                itemList.add(item); // Add the item to the ArrayList
+            }
+        } finally {
+            // Ensure the Cursor is closed to free up resources
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+    }
+
+    public String getItemName(String itemGlobalID) {
+        String itemName = null;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            String query = "SELECT " + NAME_COLUMN_ITEMS + " FROM " + NAME_TABLE_ITEMS + " WHERE " + GLOBAL_ID_COLUMN_ITEMS + " = ?";
+            cursor = db.rawQuery(query, new String[]{itemGlobalID});
+
+            if (cursor.moveToFirst()) {
+                itemName = cursor.getString(0);
+            }
+        } catch (Exception e) {
+            Log.e("ItemDatabase", "Failed to get item name: " + e.getMessage());
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return itemName;
+    }
+
+    public void updateItem(){
+
+    }
+
+    public void deleteItem(){
+
+    }
+
+}
+========== NEW ITEM ==========
+package com.module.dot.view.fragments;
+
+import static android.app.Activity.RESULT_OK;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.VectorDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.module.dot.view.MainActivity;
+import com.module.dot.data.remote.FirebaseHandler;
+import com.module.dot.view.utils.ScannerManager;
+import com.module.dot.R;
+import com.module.dot.model.Item;
+
+import java.util.ArrayList;
+
+
+public class NewItemFragment extends Fragment {
+    private ImageButton step1Button;
+    private ImageButton step2Button;
+    private ImageButton step3Button;
+    private View contactLeft;
+    private View contactRight;
+    private View OtherRight;
+    private TextView stepTwoTextView;
+    private TextView stepThreeTextView;
+    private ProgressBar progressBar;
+    private ImageButton previousButton;
+    private ImageButton nextButton;
+    private FrameLayout stepContentContainer;
+    private View stepOneLayout;
+    private View stepTwoLayout;
+    private View stepThreeLayout;
+    private int currentStep = 1; // track step for next and previous button
+
+
+    // Step One field
+    private ImageView itemImage;
+    private TextInputEditText itemName;
+    private Spinner category;
+    private TextInputEditText unitPrice;
+
+    private TextInputEditText sku;
+    private Spinner unitType;
+    private TextInputEditText itemStock;
+
+    // Step Three field
+    private TextInputEditText wholesalePrice;
+    private TextInputEditText itemTax;
+    private TextInputEditText itemDescription;
+
+    private Button saveButton;
+    private FragmentActivity fragmentActivity;
+
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        fragmentActivity = (FragmentActivity) context;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_new_item_, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        progressBar = view.findViewById(R.id.progress_horizontal);
+
+        step1Button = view.findViewById(R.id.stepOneButton);
+        step2Button = view.findViewById(R.id.stepTwoButton);
+        step3Button = view.findViewById(R.id.stepThreeButton);
+
+        contactLeft = view.findViewById(R.id.contactLeftView);
+        contactRight = view.findViewById(R.id.contactRightView);
+        OtherRight = view.findViewById(R.id.OtherRightView);
+
+        stepTwoTextView = view.findViewById(R.id.stepTwoTextView);
+        stepThreeTextView = view.findViewById(R.id.stepThreeTextView);
+
+        previousButton = view.findViewById(R.id.previousButton);
+        nextButton = view.findViewById(R.id.nextButton);
+        saveButton = view.findViewById(R.id.saveButton);
+
+        stepContentContainer = view.findViewById(R.id.stepContentContainer);
+
+        // Steps layout
+        stepOneLayout = LayoutInflater.from(getContext()).inflate(R.layout.new_item_form_step_one, null);
+        stepTwoLayout = LayoutInflater.from(getContext()).inflate(R.layout.new_item_form_step_two, null);
+        stepThreeLayout = LayoutInflater.from(getContext()).inflate(R.layout.new_item_form_step_three, null);
+
+        // Step One form
+        itemImage = stepOneLayout.findViewById(R.id.newItemImage);
+        TextInputLayout itemNameLayout = stepOneLayout.findViewById(R.id.itemNameLayout);
+        itemName = stepOneLayout.findViewById(R.id.itemNameText);
+        category = stepOneLayout.findViewById(R.id.productCategoryText);
+        TextInputLayout unitPriceLayout = stepOneLayout.findViewById(R.id.unitPriceLayout);
+        unitPrice = stepOneLayout.findViewById(R.id.unitPriceText);
+
+        // Step two form
+        // Step Two field
+        TextInputLayout skuLayout = stepTwoLayout.findViewById(R.id.SKULayout);
+        sku = stepTwoLayout.findViewById(R.id.SKUText);
+        unitType = stepTwoLayout.findViewById(R.id.unitSpinner);
+        itemStock = stepTwoLayout.findViewById(R.id.stockText);
+
+        // Step three form
+        wholesalePrice = stepThreeLayout.findViewById(R.id.wholesalesPrice);
+        itemTax = stepThreeLayout.findViewById(R.id.taxText);
+        itemDescription = stepThreeLayout.findViewById(R.id.productDescriptionText);
+
+        // Have data from the database
+        ArrayList<String> categoryOptions = new ArrayList<>(); // Category Option Spinner
+        ArrayList<String> unitOptions = new ArrayList<>(); // Unit Option Spinner
+
+        ScannerManager scannerManager = new ScannerManager(this);
+
+        // Progress bar default value
+        progressBar.setProgress(33);
+
+        step1Button.setOnClickListener(v -> {
+            // Handle Step 1 button click
+            showStepContent(1);
+        });
+
+        step2Button.setOnClickListener(v -> {
+            // Handle Step 2 button click
+            showStepContent(2);
+        });
+
+        step3Button.setOnClickListener(v -> {
+            // Handle Step 3 button click
+            showStepContent(3);
+        });
+
+        previousButton.setOnClickListener(v -> {
+            currentStep--; // Decrease currentStep by 1
+            showStepContent(currentStep);
+        });
+
+        nextButton.setOnClickListener(v -> {
+            currentStep++; // Increase currentStep by 1
+            showStepContent(currentStep);
+        });
+
+        // Show the initial step content
+        showStepContent(currentStep);
+
+        // Load data to Category Option Spinner
+        categoryOptions.add("Category");
+        categoryOptions.add("Soft Drink");
+        categoryOptions.add("Alcohol");
+        categoryOptions.add("Game");
+
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, categoryOptions);
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        category.setAdapter(categoryAdapter);
+
+        // Load data to Product Unit spinner
+        unitOptions.add("Unit");
+        unitOptions.add("Hour");
+        unitOptions.add("Liter");
+
+        ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitOptions);
+        unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        unitType.setAdapter(unitAdapter);
+
+        // Selected Image
+        ActivityResultLauncher<Intent> imagePickerLauncher =
+                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                        result -> {
+                            if (result.getResultCode() == RESULT_OK) {
+                                assert result.getData() != null;
+                                Uri uri = result.getData().getData();
+                                itemImage.setImageURI(uri);  // Set image to itemImage view
+                            }
+                        });
+
+        // Click on Image Item
+        itemImage.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            imagePickerLauncher.launch(intent);
+
+
+        });
+
+
+
+
+        saveButton.setOnClickListener(v -> {
+            Item newItem = getItemFromForm();
+            newItem.setCreatorID(MainActivity.currentUser.getCreatorID());
+
+            Drawable itemImageTemp;
+
+            if (!isImageSame(itemImage.getDrawable(), ContextCompat.getDrawable(getContext(), R.drawable.uploading))) {
+                itemImageTemp = itemImage.getDrawable();
+            } else{
+                itemImageTemp = null;
+            }
+
+            FirebaseHandler.createItem(newItem, itemImageTemp); // Save data to firebase
+
+            Toast.makeText(getContext(), "Item created!", Toast.LENGTH_SHORT).show();
+
+            // Replace Add item fragment with Home Fragment
+            FragmentManager fragmentManager =  fragmentActivity.getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+            ItemsFragment itemsFragment = new ItemsFragment();
+            fragmentTransaction.replace(R.id.fragment_container, itemsFragment); // Replace previous fragment
+            fragmentTransaction.addToBackStack(null); // Add the transaction to the back stack
+            fragmentTransaction.commit();
+        });
+
+        skuLayout.setEndIconOnClickListener(v -> {
+            scannerManager.startBarcodeScanning();
+            sku.setText(scannerManager.getScanItem());
+        });
+    }
+
+    private void showStepContent(int step) {
+        // Default Color
+        int colorYellow = ContextCompat.getColor(getContext(), R.color.black);
+        int colorGray = ContextCompat.getColor(getContext(), R.color.light_gray);
+        int colorWhite = ContextCompat.getColor(getContext(), R.color.white);
+
+        if (step < 1) {
+            step = 1;
+        }
+
+        else if(step > 3) {
+            step = 3;
+        }
+
+        // Set active button background
+        switch (step) {
+            case 1:
+                stepContentContainer.removeAllViews();
+                stepContentContainer.addView(stepOneLayout);
+
+                currentStep = 1; // Reset currentStep value to one
+
+                step1Button.setClickable(false); // Make step1Button not clickable
+                step2Button.setClickable(true); // Make step2Button clickable
+                step3Button.setClickable(true); // Make step3Button clickable
+
+                previousButton.setClickable(false); // Make previousButton not clickable
+                nextButton.setClickable(true); // Make nextButton clickable
+
+                // Reset other views colors to gray
+                contactLeft.setBackgroundColor(colorGray);
+                step2Button.setBackgroundTintList(ColorStateList.valueOf(colorGray));
+                stepTwoTextView.setTextColor(colorGray);
+                contactRight.setBackgroundColor(colorGray);
+                step3Button.setBackgroundTintList(ColorStateList.valueOf(colorGray));
+                stepThreeTextView.setTextColor(colorGray);
+                OtherRight.setBackgroundColor(colorGray);
+
+                progressBar.setProgress(33);
+
+                // Reset previous button color
+                previousButton.setBackgroundResource(R.drawable.button_style);
+                previousButton.setBackgroundTintList(ColorStateList.valueOf(colorGray));
+                previousButton.setColorFilter(colorWhite);
+
+                // Reset next button color
+                nextButton.setBackgroundResource(R.drawable.button_style);
+                nextButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                saveButton.setVisibility(View.GONE);
+                nextButton.setVisibility(View.VISIBLE);
+
+                break;
+            case 2:
+                stepContentContainer.removeAllViews();
+                stepContentContainer.addView(stepTwoLayout);
+
+                currentStep = 2; // Reset currentStep value to two
+
+                // Step button clickable
+                step1Button.setClickable(true);
+                step2Button.setClickable(false);
+                step3Button.setClickable(true);
+
+                previousButton.setClickable(true); // Make previousButton to clickable
+                nextButton.setClickable(true); // Make nextButton to clickable
+
+                contactLeft.setBackgroundColor(colorYellow);
+                step2Button.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                stepTwoTextView.setTextColor(colorYellow);
+
+                // Reset other views colors to gray
+                contactRight.setBackgroundColor(colorGray);
+                step3Button.setBackgroundTintList(ColorStateList.valueOf(colorGray));
+                stepThreeTextView.setTextColor(colorGray);
+                OtherRight.setBackgroundColor(colorGray);
+
+                progressBar.setProgress(58);
+
+                // Change previous button color
+                previousButton.setBackgroundResource(R.drawable.button_style);
+                previousButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                previousButton.setColorFilter(colorWhite);
+
+                // Reset next button color
+                nextButton.setBackgroundResource(R.drawable.button_style);
+                nextButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                saveButton.setVisibility(View.GONE);
+                nextButton.setVisibility(View.VISIBLE);
+
+                break;
+            case 3:
+                stepContentContainer.removeAllViews();
+                stepContentContainer.addView(stepThreeLayout);
+
+                currentStep = 3; // Reset currentStep value to three
+
+                // Step button clickable
+                step1Button.setClickable(true);
+                step2Button.setClickable(true);
+                step3Button.setClickable(false);
+
+                previousButton.setClickable(true); // Make previousButton to clickable
+                nextButton.setClickable(true);
+
+                contactLeft.setBackgroundColor(colorYellow);
+                step2Button.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                stepTwoTextView.setTextColor(colorYellow);
+                contactRight.setBackgroundColor(colorYellow);
+                step3Button.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                stepThreeTextView.setTextColor(colorYellow);
+                OtherRight.setBackgroundColor(colorYellow);
+
+                progressBar.setProgress(100);
+
+                // Change previous button color
+                previousButton.setBackgroundResource(R.drawable.button_style);
+                previousButton.setBackgroundTintList(ColorStateList.valueOf(colorYellow));
+                previousButton.setColorFilter(colorWhite);
+
+                nextButton.setVisibility(View.GONE);
+                saveButton.setVisibility(View.VISIBLE);
+
+                break;
+        }
+
+    }
+
+    private Item getItemFromForm() {
+        return new Item(
+                String.valueOf(itemName.getText()).trim(),
+                Double.parseDouble(String.valueOf(unitPrice.getText()).trim()),
+                category.getSelectedItem().toString(),
+                String.valueOf(sku.getText()).trim(),
+                unitType.getSelectedItem().toString(),
+                Integer.parseInt(String.valueOf(itemStock.getText()).trim()),
+                Double.parseDouble(String.valueOf(wholesalePrice.getText()).trim()),
+                Double.parseDouble(String.valueOf(itemTax.getText()).trim()),
+                String.valueOf(itemDescription.getText())
+        );
+    }
+
+    private boolean isImageSame(Drawable currentDrawable, Drawable uploadingDrawable) {
+        if (currentDrawable != null && uploadingDrawable != null) {
+            Bitmap bitmapCurrent = getBitmapFromVectorDrawable(currentDrawable);
+            Bitmap bitmapUploading = getBitmapFromVectorDrawable(uploadingDrawable);
+
+            return bitmapCurrent.sameAs(bitmapUploading);
+        }
+
+        return false;
+    }
+
+    private Bitmap getBitmapFromVectorDrawable(Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        } else if (drawable instanceof VectorDrawable) {
+            Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                    drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
+            return bitmap;
+        } else {
+            throw new IllegalArgumentException("unsupported drawable type");
+        }
+    }
+
+}========== ITEMS ==========
+package com.module.dot.view.fragments;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.module.dot.data.local.ItemDatabase;
+import com.module.dot.view.MainActivity;
+import com.module.dot.data.remote.FirebaseHandler;
+import com.module.dot.R;
+import com.module.dot.model.Item;
+import com.module.dot.view.adapters.ItemAdapter;
+
+import java.util.ArrayList;
+import java.util.Objects;
+
+
+public class ItemsFragment extends Fragment {
+    private FragmentActivity fragmentActivity;
+
+    // Hold data from the database
+    private final ArrayList<Item> itemList = new ArrayList<>();
+
+
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        fragmentActivity = (FragmentActivity) context;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_items, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        LinearLayout noData = view.findViewById(R.id.noDataItemFragmentLL); // When Database is empty
+        RecyclerView recyclerView = view.findViewById(R.id.itemList);
+//        GridView itemGridview = view.findViewById(R.id.itemList); // When list of item will show
+        FloatingActionButton addItem = view.findViewById(R.id.addButton); // Add Item floating button
+
+        FirebaseHandler.readItem("items", getContext());
+
+
+        try (ItemDatabase itemDatabase = new ItemDatabase(getContext())) {
+            if (itemDatabase.isTableEmpty("items")) {
+                itemDatabase.showEmptyStateMessage(recyclerView, noData);
+            } else {
+                itemDatabase.showStateMessage(recyclerView, noData);
+
+                itemDatabase.readItem(itemList); // Read data from database and save it the arraylist
+            }
+        } catch (Exception e) {
+            Log.i("UserFragment", Objects.requireNonNull(e.getMessage()));
+        }
+
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+        recyclerView.setAdapter(new ItemAdapter(itemList, getContext()));
+
+//        // Initialize adapter with the arrays
+//        ItemGridAdapter adapter = new ItemGridAdapter(itemList, getContext());
+//
+//        itemGridview.setAdapter(adapter);
+
+//        itemGridview.setOnItemClickListener((parent, view12, position, id) -> Toast.makeText(getContext(), "You selected " + itemList.get(position).getName(), Toast.LENGTH_SHORT).show());
+
+        if(!Objects.equals(MainActivity.currentUser.getPositionTitle(), "Administrator")){
+            addItem.setVisibility(View.GONE);
+        }
+
+        addItem.setOnClickListener(view1 -> showFragment(new NewItemFragment()));
+    }
+
+    private void showFragment(Fragment fragment) {
+        FragmentManager fragmentManager = fragmentActivity.getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        fragmentTransaction.replace(R.id.fragment_container, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+    }
+}========== HOME ==========
+package com.module.dot.view.fragments;
+
+/*
+ Created by Wiscarlens Lucius on 1 February 2023.
+ */
+
+import static com.module.dot.utils.LocalFormat.getCurrentDateTime;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
+import com.module.dot.view.adapters.OrderItemAdapter;
+import com.module.dot.model.Item;
+import com.module.dot.view.adapters.ItemAdapter;
+import com.module.dot.view.MainActivity;
+import com.module.dot.model.Order;
+import com.module.dot.model.Transaction;
+import com.module.dot.data.remote.FirebaseHandler;
+import com.module.dot.data.local.ItemDatabase;
+import com.module.dot.utils.LocalFormat;
+import com.module.dot.view.utils.ScannerManager;
+import com.module.dot.R;
+
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class HomeFragment extends Fragment {
+    private FragmentActivity fragmentActivity;
+    private Button chargeButton;
+
+    private final ArrayList<Item> itemList = new ArrayList<>();
+
+    // TODO: Make selectedItem a set instead of an arraylist
+    private final ArrayList<Item> selectedItems =  new ArrayList<>();
+
+    // Select item total
+    private final AtomicReference<Double> totalTax = new AtomicReference<>(0.00);
+    private final AtomicReference<Double> totalPrice = new AtomicReference<>(0.00);
+    private String currentTax;
+    private String currentCharge;
+    public Long totalItem = 0L;
+
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        fragmentActivity = (FragmentActivity) context;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_home, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        MainActivity mainActivity = (MainActivity) getActivity();
+        assert mainActivity != null;
+        mainActivity.enableNavigationViews(View.VISIBLE);
+
+        LinearLayout noData = view.findViewById(R.id.noDataHomeFragmentLL); // When Database is empty
+        RecyclerView recyclerView = view.findViewById(R.id.itemList);
+        FloatingActionButton scanButton = view.findViewById(R.id.scanButton);
+        chargeButton = view.findViewById(R.id.Charge);
+
+        ScannerManager scannerManager = new ScannerManager(this);
+
+        try (ItemDatabase itemDatabase = new ItemDatabase(getContext())) {
+            if (itemDatabase.isTableEmpty("items")) {
+                itemDatabase.showEmptyStateMessage(recyclerView, noData);
+            } else {
+                itemDatabase.showStateMessage(recyclerView, noData);
+                itemDatabase.readItem(itemList); // Read data from database and save it the arraylist
+            }
+        } catch (Exception e) {
+            Log.i("UserFragment", Objects.requireNonNull(e.getMessage()));
+        }
+
+        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+        recyclerView.setAdapter(new ItemAdapter(itemList, getContext(), this));
+
+        updateTax(0.0);
+        updateAmount(0.00);
+
+//        // When user select an item
+//        itemGridview.setOnItemClickListener((parent, view1, position, id) -> {
+//            // Find the selected item
+//            Item selectedItem = new Item(
+//                    itemList.get(position).getGlobalID(),
+//                    itemList.get(position).getName(),
+//                    itemList.get(position).getPrice(),
+//                    itemList.get(position).getTax(),
+//                    itemList.get(position).getSku(),
+//                    1L
+//            );
+//
+//            // TODO: Optimize - All the line below can be part of addToSElected Item method
+//            double itemSelectedPrice = itemList.get(position).getPrice();
+//            double tax = (itemList.get(position).getTax() / 100) * itemSelectedPrice;
+//
+//            totalItem ++;
+//
+//            addToSelectedItems(selectedItem);
+//            updateTax(tax);
+//            updateAmount(itemSelectedPrice);
+//
+//        });
+
+        // When user click on charge button
+        chargeButton.setOnClickListener(v -> {
+            // Open bottom sheet layout
+            Dialog dialog = showButtonDialog();
+
+            final double bottomSheetHeight = 0.58; // Initialize to 56% of the screen height
+
+            setBottomSheetHeight(dialog, bottomSheetHeight);
+        });
+
+        // When user click on scanner button
+        scanButton.setOnClickListener(v -> {
+                if (itemList.isEmpty()) {
+                    Toast.makeText(fragmentActivity, getResources().getString(R.string.empty_database), Toast.LENGTH_SHORT).show();
+                } else {
+                    scannerManager.startBarcodeScanning(); // Scan barcode
+                    String barcode = scannerManager.getScanItem(); // get barcode
+
+                    for (Item item : itemList) {
+                        if (barcode.equals(item.getSku())) {
+                            addToSelectedItems(item); // Add the item to the selectedItems list
+                            updateAmount(item.getPrice()); // Update Selected Item amount
+
+                            break;
+                        } else {
+                            Toast.makeText(fragmentActivity, "Item not found", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+
+
+
+
+                    // Find the barcode in the database
+//                    scanCode();  // Scan barcode to add item to cart
+                }
+            }
+        );
+    }
+
+    public Dialog showButtonDialog(){
+        final Dialog bottomSheetDialog = new Dialog(requireContext());
+
+        bottomSheetDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        bottomSheetDialog.setContentView(R.layout.bottomsheet_layout);
+
+        TextView taxTotal = bottomSheetDialog.findViewById(R.id.taxTotal);
+        TextView transactionTotal = bottomSheetDialog.findViewById(R.id.transactionTotal);
+        Button checkoutButton = bottomSheetDialog.findViewById(R.id.checkoutButton);
+        RecyclerView bottomSheetRecyclerView = bottomSheetDialog.findViewById(R.id.transactionSheetList); // Find the RecyclerView in the layout
+
+        taxTotal.setText(String.valueOf(currentTax));
+        transactionTotal.setText(currentCharge);
+
+        // Bottom sheet recycle view
+        bottomSheetRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Create the adapter and set it to the RecyclerView
+        OrderItemAdapter orderItemAdapter = new OrderItemAdapter(selectedItems, getContext());
+        bottomSheetRecyclerView.setAdapter(orderItemAdapter);
+
+        checkoutButton.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+
+            // Check if recycle view is empty before check out
+            if (!selectedItems.isEmpty()) {
+                // Sending total price to confirmationFragment
+                Bundle result = new Bundle();
+                result.putString("price", currentCharge);
+                getParentFragmentManager().setFragmentResult("priceData", result);
+
+                // Confirmation message to check out
+                AlertDialog.Builder checkoutConfirmation = new AlertDialog.Builder(getContext());
+
+                checkoutConfirmation.setTitle(getResources().getString(R.string.confirm))
+                        .setMessage(getResources().getString(R.string.confirm_checkout))
+                        .setNegativeButton(getResources().getString(R.string.no), (dialog, which) -> {
+                             // Complete with the value 'false'
+                        }).setPositiveButton(getResources().getString(R.string.yes), (dialog, which) -> {
+                           // If user click on yes
+                            // Create New Order
+
+                            String[] dateTime = getCurrentDateTime(); // Get the current date and time
+
+                           String orderGlobalID = FirebaseHandler.createOrder(new Order(
+                                   MainActivity.currentUser.getCreatorID(),   // Creator ID
+                                   dateTime[0],
+                                   dateTime[1],
+                                   totalPrice.get(), // Total amount
+                                   totalItem, // Total item
+                                   "Completed", // TODO: replace with the actual Order status
+                                   selectedItems
+                           ));
+
+                            FirebaseHandler.readOrder("orders", getContext());
+
+                            dateTime = getCurrentDateTime(); // Get the current date and time
+
+                            // TODO: Create a new transaction
+
+                            // Save data to firebase
+                            FirebaseHandler.createTransaction( new Transaction(
+                                    orderGlobalID, // Order ID
+                                    "APPROVE", // TODO: replace with the actual transaction status
+                                    totalPrice.get(),
+                                    "visa", // TODO: replace with the actual payment method
+                                    MainActivity.currentUser.getCreatorID(),
+                                    dateTime[0],
+                                    dateTime[1]
+                            ));
+
+                            FirebaseHandler.readTransaction("transactions", getContext());
+
+                            // Sending order number to receipt fragment
+                            Bundle orderNumberBundle = new Bundle();
+                            orderNumberBundle.putString("orderNumber", orderGlobalID);
+                            getParentFragmentManager().setFragmentResult("orderNumberData", orderNumberBundle);
+
+                            // Open Confirmation fragment
+                            FragmentManager fragmentManager = fragmentActivity.getSupportFragmentManager();
+                            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                            ConfirmationFragment confirmationFragment = new ConfirmationFragment();
+                            fragmentTransaction.replace(R.id.fragment_container, confirmationFragment);
+                            fragmentTransaction.commit();
+
+                        }).show();
+
+            } else {
+                String message = getResources().getString(R.string.empty_cart);
+                Toast.makeText(fragmentActivity, message, Toast.LENGTH_SHORT).show();
+            }
+
+        });
+
+        bottomSheetDialog.show();
+
+        Objects.requireNonNull(bottomSheetDialog.getWindow()).setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        bottomSheetDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        bottomSheetDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+        bottomSheetDialog.getWindow().setGravity(Gravity.BOTTOM);
+
+        return bottomSheetDialog;
+    }
+
+    /**
+     * Sets the height of a dialog displayed as a bottom sheet to a specified percentage of the screen height.
+     *
+     * @param dialog The dialog for which to set the height.
+     * @param heightPercentage The desired height of the dialog as a percentage of the screen height.
+     */
+    private void setBottomSheetHeight(Dialog dialog, double heightPercentage){
+        // Set the height of the dialog
+        Window window = dialog.getWindow();
+
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, (int) (heightPercentage * getScreenHeight()));
+            window.setGravity(Gravity.BOTTOM);
+        }
+    }
+
+    /**
+     * Retrieves the height of the device screen in pixels.
+     *
+     * @return The height of the screen in pixels.
+     */
+    private int getScreenHeight() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        requireActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        return displayMetrics.heightPixels;
+    }
+
+
+    /**
+     * Result launcher for initiating barcode scanning and handling the scanning result.
+     */
+    ActivityResultLauncher<ScanOptions>  scannerLauncher = registerForActivityResult(new ScanContract(), result -> {
+        String scanItem = result.getContents();
+
+        for (Item item : itemList) {
+             if (scanItem.equals(item.getSku())) {
+                 addToSelectedItems(item); // Add the item to the selectedItems list
+                 updateAmount(item.getPrice()); // Update Selected Item amount
+
+                 break;
+             } else {
+                 Toast.makeText(fragmentActivity, "Item not found", Toast.LENGTH_SHORT).show();
+             }
+        }
+    });
+
+//    private boolean addScannedItem(String scanItem){
+//        for (Item item : item_for_display) {
+//            if (scanItem.equals(item.getSku())) {
+////                return true;
+//                addToSelectedItems(item); // Add the item to the selectedItems list
+//                updateAmount(item.getPrice()); // Update Selected Item amount
+//
+////                break;
+//            } else {
+//                Toast.makeText(fragmentActivity, "Item not found", Toast.LENGTH_SHORT).show();
+////                return false;
+//            }
+//        }
+//
+//        return false;
+//    }
+
+    /**
+     * Adds an item to the selectedItems list or increases its frequency if it already exists.
+     *
+     * @param newItem The item to be added or whose frequency should be increased.
+     */
+    public void addToSelectedItems(Item newItem) {
+        // Check if the item is already in selectedItems
+        for (Item item : selectedItems) {
+            if (Objects.equals(item.getGlobalID(), newItem.getGlobalID())) {
+                // Item already exists, increase frequency
+                item.setQuantity(item.getQuantity() + 1);
+
+                return; // Exit the method since the item was found
+            }
+        }
+
+        // Item not found, add it to selectedItems
+        selectedItems.add(newItem);
+    }
+
+    public void updateAmount(double amount) {
+        // Add selected item price together
+        totalPrice.set(totalPrice.get() + amount); // Add the item price to the total price
+
+        // Format the double value into currency format
+        currentCharge = LocalFormat.getCurrencyFormat(totalPrice.get());
+
+        // Set the button text to the current value of price
+        chargeButton.setText(currentCharge);
+    }
+
+    public void updateTax(double amount) {
+        totalTax.set(totalTax.get() + amount);
+
+        currentTax = LocalFormat.getCurrencyFormat(totalTax.get());
+
+
+    }
+
+
+}========== FIREBASE ==========
+package com.module.dot.data.remote;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.util.Log;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageException;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.module.dot.model.Item;
+import com.module.dot.view.MainActivity;
+import com.module.dot.model.Order;
+import com.module.dot.model.Transaction;
+import com.module.dot.model.User;
+import com.module.dot.data.local.ItemDatabase;
+import com.module.dot.data.local.OrderDatabase;
+import com.module.dot.data.local.OrderItemsDatabase;
+import com.module.dot.data.local.TransactionDatabase;
+import com.module.dot.data.local.UserDatabase;
+import com.module.dot.utils.FileManager;
+import com.module.dot.utils.Utils;
+
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class FirebaseHandler {
+    private final FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private static final FirebaseStorage storage = FirebaseStorage.getInstance();
+
+    public static String getCurrentUserOnlineID(FirebaseAuth mAuth) {
+        FirebaseUser firebaseUser = mAuth.getCurrentUser();
+        assert firebaseUser != null;
+        return firebaseUser.getUid();
+    }
+
+
+    public void createUser(User newUser, Drawable profileImage, Context context){
+        if (newUser.getEmail() == null || newUser.getEmail().isEmpty() || newUser.getPassword_hash() == null || newUser.getPassword_hash().isEmpty()) {
+            Log.e("FirebaseHandler", "Email or password cannot be empty");
+            return;
+        }
+
+        mAuth.createUserWithEmailAndPassword(newUser.getEmail(), newUser.getPassword_hash())
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        try {
+
+                            String globalID = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
+                            newUser.setGlobalID(globalID);
+
+                            if (MainActivity.currentUser == null){
+                                newUser.setCreatorID(globalID); // Create user from log in page
+                            } else {
+                                newUser.setCreatorID(MainActivity.currentUser.getGlobalID());
+                            }
+
+                            if (profileImage != null){
+                                newUser.setProfileImagePath(globalID);
+                                uploadFile(profileImage, "Profiles/" + globalID);
+                            }
+
+                            DatabaseReference currentUserDb = FirebaseDatabase.getInstance().getReference();
+                            currentUserDb.child("users").child(globalID).setValue(newUser);
+
+                            Log.i("Firebase", "User Added Successfully!");
+
+
+                        } catch (Exception e) {
+                            Log.e("Firebase", "Error while adding user to online database", e);
+                        }
+
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d("Firebase", "createUserWithEmail:success");
+                        Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w("Firebase", "createUserWithEmail:failure", task.getException());
+                        // Inside your Fragment class
+                        Toast.makeText(context, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+    }
+
+
+    public static void uploadFile(Drawable image, String imagePath) {
+        Log.d("FirebaseHandler", "uploadFile: " + imagePath);
+        Log.d("FirebaseHandler", "uploadFile: " + image);
+
+        Bitmap bitmap = Utils.drawableToBitmap(image);
+
+        // Compress the Bitmap into a ByteArrayOutputStream with 25% quality
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 25, baos);
+
+        // Convert the ByteArrayOutputStream to a byte array
+        byte[] imageData = baos.toByteArray();
+
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageReference = storage.getReference(imagePath);
+
+        UploadTask uploadTask = storageReference.putBytes(imageData);
+        uploadTask.addOnFailureListener(exception -> {
+            // Handle unsuccessful uploads
+            Log.e("FirebaseHandler", "Error while uploading image to Firebase Storage", exception);
+        }).addOnSuccessListener(taskSnapshot -> Log.i("FirebaseHandler", "Image uploaded successfully"));
+    }
+
+    public static void readItem(String tableName, Context context){
+        DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(tableName);
+        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                try (ItemDatabase itemDatabase = new ItemDatabase(context)) {
+                    // Iterate through Firebase data
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+
+                        Item item = userSnapshot.getValue(Item.class);
+
+                        // Create item in the local database
+                        assert item != null;
+
+                        if (Objects.equals(MainActivity.currentUser.getCreatorID(), item.getCreatorID())){
+                            itemDatabase.createItem(item);
+
+                            if (item.getImagePath() != null){
+                                downloadAndSaveImagesLocally("Items", item.getImagePath(), context);
+                            }
+
+                        }
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e("FirebaseItemDatabase", "Failed to sync item data from Firebase: " + e.getMessage());
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("UserDatabase", "Firebase data fetch cancelled: " + error.getMessage());
+
+            }
+        });
+
+    }
+
+
+    // Synchronize user data from Firebase to SQLite
+    public static void readUser(String tableName, Context context){
+        DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(tableName);
+
+        // Fetch data from Firebase
+        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                try (UserDatabase userDatabase = new UserDatabase(context)) {
+                    // Iterate through Firebase data
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        User firebaseUser = userSnapshot.getValue(User.class);
+
+                        // Create user in the local database
+                        assert firebaseUser != null;
+
+                        // Do not show current user in the list
+                        if (Objects.equals(firebaseUser.getGlobalID(), MainActivity.currentUser.getGlobalID())) {
+                            Log.i("FirebaseUserDatabase", "Skipping current user: " + firebaseUser.getFullName());
+                        } else {
+                            if (Objects.equals(MainActivity.currentUser.getCreatorID(), firebaseUser.getCreatorID())){
+                                userDatabase.createUser(firebaseUser);
+
+                                if (firebaseUser.getProfileImagePath() != null){
+                                    downloadAndSaveImagesLocally("Profiles", firebaseUser.getProfileImagePath(), context);
+                                }
+
+                                Log.i("FirebaseUserDatabase", "User with email " + firebaseUser.getEmail() + " added to SQLite.");
+                            }
+                        }
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e("FirebaseUserDatabase", "Failed to sync user data from Firebase: " + e.getMessage());
+                }
+            }
+
+
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("UserDatabase", "Firebase data fetch cancelled: " + databaseError.getMessage());
+            }
+
+
+        });
+    }
+
+    public static void downloadAndSaveImagesLocally(String folderName, String fileName, Context context) {
+        final long FIVE_MEGABYTES = 1024 * 1024 * 5;
+
+        String imagePath = folderName + "/" + fileName;
+        StorageReference imageRef = storage.getReference(imagePath);
+
+        try {
+            imageRef.getBytes(FIVE_MEGABYTES).addOnSuccessListener(bytes -> {
+                Drawable image = Utils.byteArrayToDrawable(bytes, context.getResources());
+
+                FileManager.saveImageLocally(context, image, folderName, fileName);
+            }).addOnFailureListener(exception -> {
+                if (exception instanceof StorageException) {
+                    int errorCode = ((StorageException) exception).getErrorCode();
+                    if (errorCode == StorageException.ERROR_OBJECT_NOT_FOUND || errorCode == StorageException.ERROR_RETRY_LIMIT_EXCEEDED) {
+                        // If the error is due to object not found or retry limit exceeded, retry after 5 seconds
+                        new Handler().postDelayed(() -> downloadAndSaveImagesLocally(folderName, fileName, context), 5000);
+                    }
+                } else {
+                    Log.e("Firebase", "Error downloading item image", exception);
+                }
+            });
+
+        } catch (IndexOutOfBoundsException e){
+            Log.e("Firebase", "The maximum allowed buffer size was exceeded.", e);
+        }
+    }
+
+
+//    public static void downloadAndSaveImagesLocally(String folderName, String fileName, Context context) {
+//        final long ONE_MEGABYTE = 1024 * 1024;
+//
+//        String imagePath = folderName + "/" + fileName;
+//        StorageReference imageRef = storage.getReference(imagePath);
+//
+//        try {
+//            imageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(bytes -> {
+//                Drawable image = Utils.byteArrayToDrawable(bytes, context.getResources());
+//
+//                FileManager.saveImageLocally(context, image, folderName, fileName);
+//            }).addOnFailureListener(exception -> {
+//                Log.e("Firebase", "Error downloading item image", exception);
+//            });
+//
+//        } catch (IndexOutOfBoundsException e){
+//            Log.e("Firebase", "The maximum allowed buffer size was exceeded.", e);
+//        }
+//
+//    }
+
+    public static void createItem(Item newItem, Drawable itemImage){
+        DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference("items");
+
+        // Use push to generate a unique key
+        DatabaseReference newItemRef = itemsRef.push();
+
+        String globalID = newItemRef.getKey(); // Get get item global ID
+
+        newItem.setGlobalID(globalID);
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            // Set the creatorID of the item to the uid of the currently authenticated user
+            newItem.setCreatorID(currentUser.getUid());
+
+            if(itemImage != null){
+                newItem.setImagePath(globalID);
+                Log.d("FirebaseHandler", "createItem: " + itemImage);
+            } else {
+                newItem.setImagePath(null);
+                Log.d("FirebaseHandler", "createItem: " + "No image");
+            }
+
+            // Set the item with the generated key
+            newItemRef.setValue(newItem).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    if (itemImage != null){
+                        // Save the image to Firebase Storage with the generated key
+                        uploadFile(itemImage, "Items/" + globalID);
+                    }
+
+                    Log.i("Firebase", "Item Added Successfully!");
+                }
+            }).addOnFailureListener(e ->
+                    Log.d("Firebase", "createUserWithEmail:failure")
+            );
+        } else {
+            // User is not authenticated
+            Log.w("Firebase", "User is not authenticated. Cannot create item.");
+        }
+    }
+
+    public String getUserAuthenticationStatus() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+
+        if (currentUser != null) {
+            return "Authenticated";
+        } else {
+            return null; // or return "Not Authenticated";
+        }
+    }
+
+
+    public static String createOrder(Order newOrder) {
+        DatabaseReference ordersRef = FirebaseDatabase.getInstance().getReference("orders");
+
+        // Use push to generate a unique key
+        DatabaseReference newOrderRef = ordersRef.push();
+
+        String globalID = newOrderRef.getKey(); // Get order global ID
+
+        newOrder.setGlobalID(globalID);
+
+        // Create a map to represent the order data
+        Map<String, Object> orderData = new HashMap<>();
+
+        orderData.put("orderDate", newOrder.getOrderDate());
+        orderData.put("orderTime", newOrder.getOrderTime());
+        orderData.put("orderStatus", newOrder.getOrderStatus());
+        orderData.put("orderTotalItems", newOrder.getOrderTotalItems());
+        orderData.put("orderTotalAmount", newOrder.getOrderTotalAmount());
+        orderData.put("creatorID", newOrder.getCreatorID());
+
+        // Handle the list of items
+        Map<String, Map<String, Object>> itemList = new HashMap<>();
+        if (newOrder.getSelectedItemList() != null) {
+            for (Item item : newOrder.getSelectedItemList()) {
+                Map<String, Object> itemData = new HashMap<>();
+
+                // Generator a unique key for selected item
+                DatabaseReference selectedItem = newOrderRef.child("selectedItem").push();
+
+                itemData.put("itemGlobalID", item.getGlobalID());
+                itemData.put("itemPrice", item.getPrice());
+                itemData.put("itemQuantity", item.getQuantity());
+
+                itemList.put(selectedItem.getKey(), itemData);
+            }
+        }
+        orderData.put("selectedItem", itemList);
+
+        // Set the order with the generated key
+        newOrderRef.setValue(orderData).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.i("Firebase", "Order Added Successfully!");
+            }
+        }).addOnFailureListener(e ->
+                Log.d("Firebase", "Order creation failed")
+        );
+
+        return globalID;
+
+    }
+
+    public static void readOrder(String tableName, Context context){
+        DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(tableName);
+        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                try (OrderDatabase orderDatabase = new OrderDatabase(context)) {
+                    // Iterate through Firebase data
+                    for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
+                        // Extract order data
+                        Map<String, Object> orderData = (Map<String, Object>) orderSnapshot.getValue();
+
+                        if (orderData != null) {
+
+                            Order order = new Order(
+                                    orderSnapshot.getKey(),
+                                    (String) orderData.get("creatorID"),
+                                    (String) orderData.get("orderDate"),
+                                    (String) orderData.get("orderTime"),
+                                    (Double) orderData.get("orderTotalAmount"),
+                                    ((Long) orderData.get("orderTotalItems")),
+                                    (String) orderData.get("orderStatus")
+                            );
+
+                            if (Objects.equals(MainActivity.currentUser.getCreatorID(), order.getCreatorID())){
+                                long newOrderID = orderDatabase.createOrder(order);
+
+                                // Extract list of items
+                                DataSnapshot itemListSnapshot = orderSnapshot.child("selectedItem");
+                                if (itemListSnapshot.exists()) {
+                                    try (OrderItemsDatabase orderItemsDatabase = new OrderItemsDatabase(context)){
+                                        for (DataSnapshot itemSnapshot : itemListSnapshot.getChildren()) {
+                                            String selectedItemID = itemSnapshot.getKey(); // This is the key for each item
+                                            Map<String, Object> itemData = (Map<String, Object>) itemSnapshot.getValue();
+
+                                            assert itemData != null;
+                                            orderItemsDatabase.createOrderItems(selectedItemID,order.getGlobalID(), new Item(
+                                                    (String) itemData.get("itemGlobalID"),
+                                                    (Double) itemData.get("itemPrice"),
+                                                    (Long) itemData.get("itemQuantity")
+                                            ));
+                                        }
+
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e("FirebaseOrderDatabase", "Failed to sync Order data from Firebase: " + e.getMessage());
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("UserDatabase", "Firebase data fetch cancelled: " + error.getMessage());
+
+            }
+        });
+
+    }
+
+
+    public static void createTransaction(Transaction newTransaction){
+        DatabaseReference transactionsRef = FirebaseDatabase.getInstance().getReference("transactions");
+
+        // Use push to generate a unique key
+        DatabaseReference newTransactionRef = transactionsRef.push();
+
+        // Set the item with the generated key
+        newTransactionRef.setValue(newTransaction).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.i("FirebaseHandler", "Transaction Added Successfully!");
+            }
+        }).addOnFailureListener(e ->
+                Log.d("FirebaseHandler", "Transaction creation failed")
+        );
+    }
+
+    public static void readTransaction(String tableName, Context context){
+        DatabaseReference firebaseRef = FirebaseDatabase.getInstance().getReference(tableName);
+        firebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                try (TransactionDatabase transactionDatabase = new TransactionDatabase(context)) {
+                    // Iterate through Firebase data
+                    for (DataSnapshot transactionSnapshot : dataSnapshot.getChildren()) {
+                        Transaction transaction = transactionSnapshot.getValue(Transaction.class);
+
+                        assert transaction != null;
+
+                        if (Objects.equals(MainActivity.currentUser.getCreatorID(), transaction.getCreatorID())){
+                            transaction.setGlobalID(transactionSnapshot.getKey());
+
+                            try(OrderDatabase orderDatabase = new OrderDatabase(context)){
+                                long orderNumber =  orderDatabase.getOrderId(transaction.getOrderGlobalID());
+                                transaction.setOrderNumber(orderNumber);
+                            }
+
+                            transactionDatabase.createTransaction(transaction); // Create item in the local database
+                        }
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e("FirebaseTransactionDatabase", "Failed to sync transaction data from Firebase: " + e.getMessage());
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("TransactionDatabase", "Firebase data fetch cancelled: " + error.getMessage());
+
+            }
+        });
+
+    }
+
+
+}
