@@ -18,5 +18,14 @@
     <color name="state_blue">#5b7c99</color>
     <color name="gold">#947A42</color>
     <color name="green">#30C81F</color>
-
+<color name="brand_primary">#0F6B4B</color>
+<color name="brand_primary_dark">#094B35</color>
+<color name="brand_secondary">#D7A62A</color>
+<color name="brand_background">#F7F8F6</color>
+<color name="brand_surface">#FFFFFF</color>
+<color name="brand_text">#17211B</color>
+<color name="brand_text_secondary">#66736B</color>
+<color name="brand_success">#238636</color>
+<color name="brand_warning">#E5A000</color>
+<color name="brand_error">#C62828</color>
 </resources>

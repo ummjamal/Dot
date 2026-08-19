@@ -1,159 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">dot.</string>
-    <string name="logo">Logo</string>
-    <string name="log_in_to_your_account">Log in to your account</string>
-    <string name="email">Email</string>
-    <string name="login">Login</string>
-    <string name="password">Password</string>
-    <string name="confirm">Confirm</string>
-    <string name="confirm_password">Confirm Password</string>
-    <string name="confirm_logout">Are you sure you want to logout?</string>
-    <string name="confirm_checkout">Are you sure you want to checkout?</string>
-    <string name="remember_me">Remember me</string>
-    <string name="forgot_your_password">Forgot password?</string>
-    <string name="required">Required</string>
-    <string name="invalid_email"> Email not formatted correctly. </string>
-    <string name="hello_blank_fragment">Home Page</string>
-    <string name="finance">Finance</string>
-    <string name="add">Add</string>
-    <string name="leads">Leads</string>
-    <string name="home">Home</string>
-    <string name="users">Users</string>
-    <string name="transaction">Transactions</string>
-    <string name="recent_transactions">Recent Transactions</string>
-    <string name="profile">Profile</string>
-    <string name="settings">Settings</string>
-    <string name="logout">Logout</string>
-    <string name="navigation_drawer_close">Close Navigation</string>
-    <string name="navigation_drawer_open">Open Navigation</string>
-    <string name="saving">Saving…</string>
-    <string name="create_item">Create Item</string>
-    <string name="name">Name</string>
-    <string name="category">Category</string>
-    <string name="options">Options</string>
-    <string name="sku">SKU</string>
-    <string name="unit_type">Unit Type</string>
-    <string name="price">Price</string>
-    <string name="save">Save</string>
-    <string name="new_user">New User</string>
-    <string name="first_name">First Name</string>
-    <string name="last_name">Last Name</string>
-    <string name="fullname">Full NAME</string>
-    <string name="sign_up">Sign Up</string>
-    <string name="field_empty">This field cannot be empty</string>
-    <string name="password_empty">Password cannot be empty</string>
-    <string name="email_empty"> Email cannot be empty</string>
-    <string name="empty_cart">Your cart is empty!</string>
-    <string name="valid_email"> Please enter a valid email</string>
-    <string name="password_not_same">Password are not the same</string>
-    <string name="login_successful">Login Successful</string>
-    <string name="login_failed">Login Failed</string>
-    <string name="signup_Successful">Signup Successful</string>
-    <string name="signup_failed">Signup Failed</string>
-    <string name="no_internet">No Internet</string>
-    <string name="date_of_birth">Date of Birth</string>
-    <string name="position">Position</string>
-    <string name="scanner_barcode">Barcode Scanner</string>
-    <string name="new_item">New Item</string>
-    <string name="default_charge">$ 0.00</string>
-    <string name="cancel">Cancel</string>
-    <string name="yes">Yes</string>
-    <string name="no">NO</string>
-    <string name="current_sales">Current Sales</string>
-    <string name="product_name">Product Name</string>
-    <string name="total_unit">x</string>
-    <string name="add_new_user">Add New User</string>
-    <string name="slider">slider</string>
-    <string name="checkout">Checkout</string>
-    <string name="total">Total</string>
+
+    <string name="app_name">بقالة الشعيبي</string>
+    <string name="logo">شعار بقالة الشعيبي</string>
+
+    <string name="log_in_to_your_account">تسجيل الدخول إلى حسابك</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="password">كلمة المرور</string>
+    <string name="confirm">تأكيد</string>
+    <string name="confirm_password">تأكيد كلمة المرور</string>
+    <string name="confirm_logout">هل تريد تسجيل الخروج؟</string>
+    <string name="confirm_checkout">هل تريد تأكيد عملية البيع؟</string>
+    <string name="remember_me">تذكرني</string>
+    <string name="forgot_your_password">نسيت كلمة المرور؟</string>
+    <string name="required">مطلوب</string>
+    <string name="invalid_email">صيغة البريد الإلكتروني غير صحيحة</string>
+
+    <string name="hello_blank_fragment">الرئيسية</string>
+    <string name="finance">المالية</string>
+    <string name="add">إضافة</string>
+    <string name="leads">العملاء</string>
+    <string name="home">الرئيسية</string>
+    <string name="users">المستخدمون</string>
+    <string name="transaction">المبيعات</string>
+    <string name="recent_transactions">أحدث المبيعات</string>
+    <string name="profile">الملف الشخصي</string>
+    <string name="settings">الإعدادات</string>
+    <string name="logout">تسجيل الخروج</string>
+
+    <string name="navigation_drawer_close">إغلاق القائمة</string>
+    <string name="navigation_drawer_open">فتح القائمة</string>
+
+    <string name="saving">جارٍ الحفظ…</string>
+    <string name="create_item">إضافة صنف</string>
+    <string name="name">الاسم</string>
+    <string name="category">القسم</string>
+    <string name="options">الخيارات</string>
+    <string name="sku">الباركود / رمز الصنف</string>
+    <string name="unit_type">وحدة البيع</string>
+    <string name="price">السعر</string>
+    <string name="save">حفظ</string>
+
+    <string name="new_user">مستخدم جديد</string>
+    <string name="first_name">الاسم الأول</string>
+    <string name="last_name">اسم العائلة</string>
+    <string name="fullname">الاسم الكامل</string>
+    <string name="sign_up">إنشاء الحساب</string>
+
+    <string name="field_empty">هذا الحقل مطلوب</string>
+    <string name="password_empty">كلمة المرور مطلوبة</string>
+    <string name="email_empty">البريد الإلكتروني مطلوب</string>
+    <string name="empty_cart">سلة البيع فارغة</string>
+    <string name="valid_email">أدخل بريدًا إلكترونيًا صحيحًا</string>
+    <string name="password_not_same">كلمتا المرور غير متطابقتين</string>
+    <string name="login_successful">تم تسجيل الدخول بنجاح</string>
+    <string name="login_failed">فشل تسجيل الدخول</string>
+    <string name="signup_Successful">تم إنشاء الحساب بنجاح</string>
+    <string name="signup_failed">فشل إنشاء الحساب</string>
+    <string name="no_internet">لا يوجد اتصال بالإنترنت</string>
+
+    <string name="date_of_birth">تاريخ الميلاد</string>
+    <string name="position">الصلاحية</string>
+    <string name="scanner_barcode">ماسح الباركود</string>
+    <string name="new_item">صنف جديد</string>
+
+    <string name="default_charge">0 ر.ي</string>
+    <string name="cancel">إلغاء</string>
+    <string name="yes">نعم</string>
+    <string name="no">لا</string>
+
+    <string name="current_sales">سلة البيع الحالية</string>
+    <string name="product_name">اسم الصنف</string>
+    <string name="total_unit">×</string>
+    <string name="add_new_user">إضافة مستخدم</string>
+    <string name="slider">شريط</string>
+    <string name="checkout">إتمام البيع</string>
+    <string name="total">الإجمالي</string>
+
     <string name="One">1</string>
-    <string name="zero_dollar">0.00</string>
-    <string name="dollar_sign">$</string>
-    <string name="receipt">Receipt</string>
-    <string name="start_a_new_sale">Start a new sale</string>
-    <string name="done">Done</string>
-    <string name="transaction_confirmation">Transaction Confirmation</string>
-    <string name="Street_Name_Sample">12 Main st</string>
-    <string name="city_st_zipcode">City, ST 00000</string>
-    <string name="date_sample">06–15–2023</string>
-    <string name="time_sample">3:55:32 PM</string>
-    <string name="transaction_id_sample">ABC12345678912334567</string>
-    <string name="cart">Cart</string>
-    <string name="subtotal">Subtotal</string>
-    <string name="tax">Tax</string>
-    <string name="pending">PENDING</string>
-    <string name="print">Print</string>
-    <string name="share">Share</string>
-    <string name="barcode">Barcode</string>
-    <string name="payment_type">Payment Type</string>
-    <string name="step1button">Step1Button</string>
-    <string name="step2button">step2Button</string>
-    <string name="step3button">step3Button</string>
-    <string name="previousButton">previousButton</string>
-    <string name="nextButton">nextButton</string>
-    <string name="create_a_new_user">CREATE A NEW USER</string>
-    <string name="account">Account</string>
-    <string name="personal">Personal</string>
-    <string name="success">Success</string>
-    <string name="contact">Contact</string>
-    <string name="other">Other</string>
-    <string name="personal_information">Personal Information:</string>
-    <string name="middle_name">Middle Name</string>
-    <string name="gender">Gender</string>
-    <string name="new_user_profile">New User Profile Picture</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="street_name">Street Name</string>
-    <string name="state">State</string>
-    <string name="zip_code">Zip Code</string>
-    <string name="contact_information">Contact Information:</string>
-    <string name="city">City</string>
-    <string name="add_new_item">ADD NEW ITEM</string>
-    <string name="product">Product</string>
-    <string name="details">Details</string>
-    <string name="product_information">Product Information:</string>
-    <string name="new_item_image">New Item Image</string>
-    <string name="product_category">Product Category</string>
-    <string name="unit_price">Unit Price</string>
-    <string name="product_details">Product Details:</string>
-    <string name="unit">Unit</string>
-    <string name="stock">Stock</string>
-    <string name="product_price">Product Price:</string>
-    <string name="wholesales_price">Wholesales Price</string>
-    <string name="item_name">Item Name</string>
-    <string name="no_items">No Items</string>
-    <string name="no_data_message">Show when there is no data</string>
-    <string name="no_users">No Users</string>
-    <string name="description">Description</string>
-    <string name="orders">Orders</string>
-    <string name="no_orders">No Orders Yet</string>
+    <string name="zero_dollar">0</string>
+    <string name="dollar_sign">ر.ي</string>
+
+    <string name="receipt">الإيصال</string>
+    <string name="start_a_new_sale">بدء عملية بيع جديدة</string>
+    <string name="done">تم</string>
+    <string name="transaction_confirmation">تأكيد عملية البيع</string>
+
+    <string name="Street_Name_Sample">الضالع - اليمن</string>
+    <string name="city_st_zipcode">محافظة الضالع</string>
+    <string name="date_sample">2026/08/20</string>
+    <string name="time_sample">12:00</string>
+    <string name="transaction_id_sample">00000001</string>
+
+    <string name="cart">السلة</string>
+    <string name="subtotal">المجموع الفرعي</string>
+    <string name="tax">الضريبة</string>
+    <string name="pending">معلّق</string>
+    <string name="print">طباعة</string>
+    <string name="share">مشاركة</string>
+    <string name="barcode">الباركود</string>
+    <string name="payment_type">طريقة الدفع</string>
+
+    <string name="step1button">1</string>
+    <string name="step2button">2</string>
+    <string name="step3button">3</string>
+    <string name="previousButton">السابق</string>
+    <string name="nextButton">التالي</string>
+
+    <string name="create_a_new_user">إنشاء مستخدم جديد</string>
+    <string name="account">الحساب</string>
+    <string name="personal">البيانات الشخصية</string>
+    <string name="success">نجاح</string>
+    <string name="contact">التواصل</string>
+    <string name="other">أخرى</string>
+
+    <string name="personal_information">المعلومات الشخصية</string>
+    <string name="middle_name">الاسم الأوسط</string>
+    <string name="gender">الجنس</string>
+    <string name="new_user_profile">صورة المستخدم</string>
+    <string name="phone_number">رقم الهاتف</string>
+    <string name="street_name">العنوان</string>
+    <string name="state">المحافظة</string>
+    <string name="zip_code">الرمز البريدي</string>
+    <string name="contact_information">معلومات التواصل</string>
+    <string name="city">المدينة</string>
+
+    <string name="add_new_item">إضافة صنف جديد</string>
+    <string name="product">الصنف</string>
+    <string name="details">التفاصيل</string>
+    <string name="product_information">بيانات الصنف</string>
+    <string name="new_item_image">صورة الصنف</string>
+    <string name="product_category">قسم الصنف</string>
+    <string name="unit_price">سعر البيع</string>
+    <string name="product_details">تفاصيل الصنف</string>
+    <string name="unit">الوحدة</string>
+    <string name="stock">الكمية بالمخزون</string>
+    <string name="product_price">سعر الصنف</string>
+    <string name="wholesales_price">سعر الشراء</string>
+    <string name="item_name">اسم الصنف</string>
+
+    <string name="no_items">لا توجد أصناف</string>
+    <string name="no_data_message">لا توجد بيانات حاليًا</string>
+    <string name="no_users">لا يوجد مستخدمون</string>
+    <string name="description">الوصف</string>
+
+    <string name="orders">الفواتير</string>
+    <string name="no_orders">لا توجد فواتير حتى الآن</string>
     <string name="order_number">00000</string>
     <string name="pound">#</string>
-    <string name="status">Status</string>
-    <string name="completed">Completed</string>
+    <string name="status">الحالة</string>
+    <string name="completed">مكتمل</string>
     <string name="bar">|</string>
-    <string name="item"> Items</string>
+    <string name="item">الأصناف</string>
     <string name="zero">0</string>
-    <string name="no_transactions">No Transactions</string>
-    <string name="don_t_have_an_account">Don\'t have an account?</string>
-    <string name="create_account">Create Account</string>
-    <string name="forgot_password">Forgot Password</string>
-    <string name="reset_password">Reset Password</string>
-    <string name="forgot_password_message">Enter the email you used to sign up to reset your password.</string>
-    <string name="close_button">Close Button</string>
-    <string name="john_doe">John Doe</string>
-    <string name="johndoe_gmail_com">johndoe@gmail.com</string>
-    <string name="address">Address</string>
-    <string name="default_initial">J</string>
-    <string name="image_header">Image Header</string>
-    <string name="company_name">Company Name</string>
-    <string name="empty_database">No item in database</string>
-    <string name="payment_successful">Payment Successful</string>
-    <string name="agree_with">Agree with </string>
-    <string name="terms_conditions">Terms &amp; Conditions</string>
+    <string name="no_transactions">لا توجد مبيعات</string>
+
+    <string name="don_t_have_an_account">ليس لديك حساب؟</string>
+    <string name="create_account">إنشاء حساب</string>
+    <string name="forgot_password">نسيت كلمة المرور</string>
+    <string name="reset_password">إعادة تعيين كلمة المرور</string>
+    <string name="forgot_password_message">أدخل بريدك الإلكتروني لاستعادة كلمة المرور.</string>
+
+    <string name="close_button">إغلاق</string>
+    <string name="john_doe">مدير البقالة</string>
+    <string name="johndoe_gmail_com">example@email.com</string>
+    <string name="address">العنوان</string>
+    <string name="default_initial">ش</string>
+    <string name="image_header">الصورة</string>
+    <string name="company_name">بقالة الشعيبي</string>
+
+    <string name="empty_database">لا توجد أصناف في المخزون</string>
+    <string name="payment_successful">تمت عملية البيع بنجاح</string>
+    <string name="agree_with">أوافق على </string>
+    <string name="terms_conditions">الشروط والأحكام</string>
+
     <string name="terms_of_service_filler">
-        <b>1. Terms</b> \n\nLorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. \n \n
-        <b>2. Why do we use it?</b> \n\nIt is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using \'Content here, content here\', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for \'lorem ipsum\' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).\n\n
-        <b>3. Where does it come from?</b>\n\nContrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.\n\nThe standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from \"de Finibus Bonorum et Malorum\" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.\n
+        باستخدام تطبيق بقالة الشعيبي فإنك توافق على استخدام النظام لإدارة المنتجات والمخزون والمبيعات بطريقة نظامية. يجب الحفاظ على بيانات الدخول وعدم مشاركتها مع أشخاص غير مخولين.
     </string>
 
 </resources>
