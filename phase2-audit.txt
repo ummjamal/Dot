@@ -1,0 +1,2212 @@
+========== DATABASE MANAGER ==========
+package com.module.dot.data.local;
+
+import android.content.Context;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
+
+import androidx.annotation.Nullable;
+
+public abstract class MyDatabaseManager extends SQLiteOpenHelper {
+    // TODO: make class protected instead of public
+    protected Context context;
+    private static final String DATABASE_NAME = "Dot.db";
+    private static final int DATABASE_VERSION = 1;
+
+    public MyDatabaseManager(@Nullable Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
+    }
+
+
+
+    /**
+     * Retrieves all data from the specified database table.
+     *
+     * @param TABLE_NAME The name of the table from which to retrieve data.
+     * @return A Cursor object containing the result set of the query, or null if an error occurs.
+     */
+    Cursor readAllData(String TABLE_NAME){
+        String query = "SELECT * FROM " + TABLE_NAME;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = null;
+
+        if(db != null){
+            cursor = db.rawQuery(query, null);
+        }
+        return cursor;
+    }
+
+    /**
+     * Checks if a specified database table is empty.
+     * This method queries the specified table using a cursor to retrieve all data.
+     * It then checks the count of rows in the cursor result set and returns true
+     * if the count is zero, indicating that the table is empty. Otherwise, it returns false.
+     *
+     * @param tableName The name of the database table to be checked for emptiness.
+     * @return {@code true} if the table is empty, {@code false} otherwise.
+     */
+    public boolean isTableEmpty(String tableName){
+        Cursor cursor = readAllData(tableName);
+
+        return cursor.getCount() == 0;
+    }
+
+    public void showEmptyStateMessage(View view, LinearLayout noData){
+        // If the database is empty, hide the item grid view and show the no data message
+        view.setVisibility(View.GONE);
+        noData.setVisibility(View.VISIBLE);
+    }
+
+    public void showStateMessage(View view, LinearLayout noData) {
+        // Show the item grid view and hide the no data message
+        view.setVisibility(View.VISIBLE);
+        noData.setVisibility(View.GONE);
+    }
+
+    /**
+     * Converts an image byte array to a Drawable.
+     *
+     * @param imageData The byte array containing the image data
+     * @return A Drawable representation of the image
+     */
+    public Drawable convertByteArrayToDrawable(byte[] imageData) {
+        Resources resources = context.getResources();
+
+        // Convert the image byte array to a Bitmap
+        Bitmap itemImageBitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+
+        // Convert the Bitmap to a Drawable
+        return new BitmapDrawable(resources, itemImageBitmap);
+    }
+
+    /**
+     * Checks if a given email already exists in the "users" table of the database.
+     *
+     * @param db    The SQLiteDatabase object to perform the query on.
+     * @param email The email address to check for existence in the database.
+     * @return {@code true} if the email exists in the "users" table, {@code false} otherwise.
+     */
+    public boolean isEmailExists(SQLiteDatabase db, String email, String table_name, String email_column) {
+        // Perform a database query to check for the existence of the email
+        Cursor cursor = db.query(table_name, new String[]{email_column},
+                email_column + "=?", new String[]{email},
+                null, null, null);
+
+        boolean exists = cursor.getCount() > 0; // Check email exists in the database
+
+        cursor.close(); // Close the cursor to release resources
+        return exists; // Return the result indicating whether the email exists or not
+    }
+
+    /**
+     * Checks if a given value already exists in a specified column of the database table.
+     *
+     * @param db          The SQLiteDatabase object to perform the query on.
+     * @param tableName   The name of the table to check.
+     * @param columnName  The name of the column to check for existence.
+     * @param columnValue The value to check for existence in the specified column.
+     * @return {@code true} if the value exists in the specified column, {@code false} otherwise.
+     */
+    public boolean isValueExists(SQLiteDatabase db, String tableName, String columnName, String columnValue) {
+        // Perform a database query to check for the existence of the value
+        Cursor cursor = db.query(tableName, new String[]{columnName},
+                columnName + "=?", new String[]{columnValue},
+                null, null, null);
+
+        boolean exists = cursor.getCount() > 0; // Check if the value exists in the database
+
+        cursor.close(); // Close the cursor to release resources
+        return exists;  // Return the result indicating whether the value exists or not
+    }
+
+
+    public boolean isTableExists(String tableName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '" + tableName + "'", null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+
+    public void deleteAll(String tableName) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            // Delete all rows from the table
+            int result = db.delete(tableName, null, null);
+
+            if (result > 0) {
+                Log.i(tableName + " Table", "Successfully deleted all");
+            } else {
+                Log.e(tableName+ " Table", "Failed to delete");
+            }
+        } catch (SQLiteException e) {
+            Log.e(tableName + " Table", "Error deleting: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+}
+========== USER DATABASE ==========
+package com.module.dot.data.local;
+
+import static com.module.dot.utils.PasswordUtils.hashPassword;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+
+import com.module.dot.model.User;
+
+import java.util.ArrayList;
+
+public class UserDatabase extends MyDatabaseManager {
+    // TODO:  organize the name in alphabetical order
+    private static final String NAME_TABLE_USERS = "users";
+    private static final String LOCAL_ID_COLUMN_USERS = "local_id";
+    private static final String GLOBAL_ID_COLUMN_USERS = "global_id";
+    private static final String CREATOR_ID_COLUMN_USERS = "creator_id";
+    private static final String FIRST_NAME_COLUMN_USERS = "first_name";
+    private static final String LAST_NAME_COLUMN_USERS = "last_name";
+    private static final String DOB_COLUMN_USERS = "date_of_birth";
+    private static final String EMAIL_COLUMN_USERS = "email";
+    private static final String PHONE_NUMBER_COLUMN_USERS = "phone_number";
+    private static final String ADDRESS_COLUMN_USERS = "street_name";
+    private static final String PROFILE_IMAGE_PATH_COLUMN_USERS = "profile_image_path";
+    private static final String COMPANY_NAME_COLUMN_USERS = "company_name";
+    private static final String POSITION_TITLE_COLUMN_USERS = "position_title"; // TODO: Foreign key to a future table call position title
+    private static final String PASSWORD_HASH_COLUMN_USERS = "password_hash";
+    private static final String DATE_REGISTERED_COLUMN_USERS = "date_registered";
+
+
+    public UserDatabase(@Nullable Context context) {
+        super(context);
+    }
+
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Drop the existing "users" table
+        db.execSQL("DROP TABLE IF EXISTS " + NAME_TABLE_USERS);
+
+        // Create a new "users" table
+        onCreate(db);
+    }
+
+    protected void createTable(SQLiteDatabase db){
+        // SQL query to create the "users" table
+        String query_users = "CREATE TABLE " + NAME_TABLE_USERS + " (" +
+                LOCAL_ID_COLUMN_USERS + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                GLOBAL_ID_COLUMN_USERS + " INTEGER, " +
+                CREATOR_ID_COLUMN_USERS + " INTEGER, " +
+                FIRST_NAME_COLUMN_USERS + " TEXT NOT NULL, " +
+                LAST_NAME_COLUMN_USERS + " TEXT NOT NULL, " +
+                DOB_COLUMN_USERS + " DATE, " +
+                EMAIL_COLUMN_USERS + " TEXT NOT NULL UNIQUE, " +
+                PHONE_NUMBER_COLUMN_USERS + " TEXT, " +
+                ADDRESS_COLUMN_USERS + " TEXT, " +
+                PROFILE_IMAGE_PATH_COLUMN_USERS + " TEXT, " +
+                COMPANY_NAME_COLUMN_USERS + " TEXT," +
+                POSITION_TITLE_COLUMN_USERS + " TEXT, " +
+                PASSWORD_HASH_COLUMN_USERS + " TEXT NOT NULL, " +
+                DATE_REGISTERED_COLUMN_USERS + " TIME DEFAULT CURRENT_TIMESTAMP);";
+
+        db.execSQL(query_users);
+
+        Log.i("UserDatabase", "Creating users table...");
+    }
+
+
+    public void createUser(User newUser) throws SQLiteException {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+
+            // TODO: This block that check email will be independent from the database
+            // Check if the email already exists in the database
+            if (isValueExists(db, NAME_TABLE_USERS, EMAIL_COLUMN_USERS, newUser.getEmail())) {
+                Log.i("MyDatabaseManager", "Email already exists.");
+                return;
+            }
+
+            ContentValues cv = new ContentValues();
+
+            cv.put(GLOBAL_ID_COLUMN_USERS, newUser.getGlobalID());
+            cv.put(CREATOR_ID_COLUMN_USERS, newUser.getCreatorID());
+            cv.put(FIRST_NAME_COLUMN_USERS, newUser.getFirstName());
+            cv.put(LAST_NAME_COLUMN_USERS, newUser.getLastName());
+            cv.put(DOB_COLUMN_USERS, newUser.getDateOfBirth());
+            cv.put(EMAIL_COLUMN_USERS, newUser.getEmail());
+            cv.put(PHONE_NUMBER_COLUMN_USERS, newUser.getPhoneNumber());
+            cv.put(ADDRESS_COLUMN_USERS, newUser.getAddress());
+            cv.put(PROFILE_IMAGE_PATH_COLUMN_USERS, newUser.getProfileImagePath());
+            cv.put(POSITION_TITLE_COLUMN_USERS, newUser.getPositionTitle());
+            cv.put(COMPANY_NAME_COLUMN_USERS, newUser.getCompanyName());
+            cv.put(PASSWORD_HASH_COLUMN_USERS, hashPassword(newUser.getPassword_hash()));
+
+            long result = db.insertOrThrow(NAME_TABLE_USERS, null, cv);
+
+            if (result != -1) {
+                Log.i("MyDatabaseManager", "User Added Successfully!");
+            }
+        } catch (SQLiteException e) {
+            e.printStackTrace(); // Log the error stack trace for debugging
+            Log.e("MyDatabaseManager", "Failed to add user: " + e.getMessage());
+            throw e;
+        }
+    }
+
+
+    public void readUser(ArrayList<User> userList) {
+        Cursor cursor = super.readAllData(NAME_TABLE_USERS);
+
+        try {
+            // If users are found, populate the ArrayList with user data
+            while (cursor.moveToNext()) {
+                User newUser = new User(
+                        cursor.getString(0),    // local_id
+                        cursor.getString(1),    // global_id
+                        cursor.getString(2),    // creator_id
+                        cursor.getString(3),    // first_name
+                        cursor.getString(4),    // last_name
+                        cursor.getString(5),    // date_of_birth
+                        cursor.getString(6),    // email
+                        cursor.getString(7),    // phone_number
+                        cursor.getString(8),    // address
+                        cursor.getString(9),    // profile_image_path
+                        cursor.getString(10),   // company_name
+                        cursor.getString(11),   // position_title
+                        cursor.getString(12),   // password_hash
+                        cursor.getString(13)    // date_registered
+                );
+
+                userList.add(newUser);
+            }
+        } finally {
+            // Ensure the Cursor is closed to free up resources
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+    }
+
+
+    public void updateUser() {
+
+    }
+
+    public void deleteUser(String row_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        long result = db.delete(NAME_TABLE_USERS, "_id=?", new String[]{row_id});
+
+        if (result == -1) {
+            Toast.makeText(context, "Failed to Delete.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(context, "Successfully Deleted.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+}
+========== USER MODEL ==========
+package com.module.dot.model;
+
+import androidx.annotation.NonNull;
+
+public class User {
+    private String globalID;
+    private String localID;
+    private String creatorID;
+    private String firstName;
+    private String lastName;
+    private String dateOfBirth;
+    private String email;
+    private String phoneNumber;
+    private String address;
+    private String profileImagePath;
+    private String companyName;
+    private String positionTitle;
+    private String password_hash;
+    private String dateRegistered;
+
+    public User() {
+
+    }
+
+    // Constructor for showing the user's profile.
+    public User(String globalID, String creatorID, String firstName, String lastName,
+                String email, String companyName, String positionTitle, String profileImagePath) {
+        this.globalID = globalID;
+        this.creatorID = creatorID;
+        this.profileImagePath = profileImagePath;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.companyName = companyName;
+        this.positionTitle = positionTitle;
+    }
+
+    public User(String globalID, String localID, String creatorID, String firstName,
+                String lastName, String dateOfBirth, String email, String phoneNumber,
+                String address, String profileImagePath, String companyName,
+                String positionTitle, String password_hash, String dateRegistered) {
+        this.globalID = globalID;
+        this.localID = localID;
+        this.creatorID = creatorID;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.profileImagePath = profileImagePath;
+        this.companyName = companyName;
+        this.positionTitle = positionTitle;
+        this.password_hash = password_hash;
+        this.dateRegistered = dateRegistered;
+    }
+
+    // Constructor for the User class.
+    public User(String firstName, String lastName, String dateOfBirth,
+                String email, String phoneNumber, String address, String companyName,
+                String positionTitle, String password_hash) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.companyName = companyName;
+        this.positionTitle = positionTitle;
+        this.password_hash = password_hash;
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public String getGlobalID() {
+        return globalID;
+    }
+
+    public void setGlobalID(String globalID) {
+        this.globalID = globalID;
+    }
+
+    public String getLocalID() {
+        return localID;
+    }
+
+    public void setLocalID(String localID) {
+        this.localID = localID;
+    }
+
+    public String getCreatorID() {
+        return creatorID;
+    }
+
+    public void setCreatorID(String creatorID) {
+        this.creatorID = creatorID;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getProfileImagePath() {
+        return profileImagePath;
+    }
+
+    public void setProfileImagePath(String profileImagePath) {
+        this.profileImagePath = profileImagePath;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getPositionTitle() {
+        return positionTitle;
+    }
+
+    public void setPositionTitle(String positionTitle) {
+        this.positionTitle = positionTitle;
+    }
+
+    public String getPassword_hash() {
+        return password_hash;
+    }
+
+    public void setPassword_hash(String password_hash) {
+        this.password_hash = password_hash;
+    }
+
+    public String getDateRegistered() {
+        return dateRegistered;
+    }
+
+    public void setDateRegistered(String dateRegistered) {
+        this.dateRegistered = dateRegistered;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Users{" +
+                "globalID='" + globalID + '\'' +
+                ", localID='" + localID + '\'' +
+                ", creatorID='" + creatorID + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", dateOfBirth='" + dateOfBirth + '\'' +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", address='" + address + '\'' +
+                ", profileImagePath='" + profileImagePath + '\'' +
+                ", companyName='" + companyName + '\'' +
+                ", positionTitle='" + positionTitle + '\'' +
+                ", password_hash='" + password_hash + '\'' +
+                ", dateRegistered='" + dateRegistered + '\'' +
+                '}';
+    }
+}
+========== LOGIN FRAGMENT ==========
+package com.module.dot.view.fragments;
+
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Patterns;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.module.dot.R;
+import com.module.dot.utils.NetworkManager;
+import com.module.dot.view.MainActivity;
+import com.module.dot.view.utils.UIController;
+
+public class LoginFragment extends Fragment {
+    private TextInputLayout emailLayout;
+    private TextInputEditText email;
+    private TextInputLayout passwordLayout;
+    private TextInputEditText password;
+    private Button loginButton;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_login, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        MainActivity mainActivity = (MainActivity) getActivity();
+        assert mainActivity != null;
+        mainActivity.enableNavigationViews(View.GONE);
+
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
+        emailLayout = view.findViewById(R.id.emailLayout);
+        email = view.findViewById(R.id.email);
+        passwordLayout = view.findViewById(R.id.passwordLayout);
+        password = view.findViewById(R.id.passwordText);
+        loginButton = view.findViewById(R.id.loginButton);
+        TextView forgotPassword = view.findViewById(R.id.forgotPassword);
+        LinearLayout signUp = view.findViewById(R.id.signUpLoginLL);
+
+        UIController uiController = new UIController(requireActivity());
+
+        // This string array hold the login page message in the string file.
+        final String[] messages = {
+                getResources().getString(R.string.login_successful),
+                getResources().getString(R.string.login_failed),
+                getResources().getString(R.string.password_empty),
+                getResources().getString(R.string.email_empty),
+                getResources().getString(R.string.valid_email),
+                getResources().getString(R.string.required),
+                getResources().getString(R.string.invalid_email),
+                getResources().getString(R.string.no_internet)
+        };
+
+        password.addTextChangedListener(loginTextWatcher);
+
+        email.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String message = checkEmptyEmail();
+                emailLayout.setHelperText(message);
+                emailLayout.setHelperTextEnabled(true);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+
+        loginButton.setOnClickListener(v -> {
+            loginButton.setClickable(false);
+
+            String userEmail = String.valueOf(email.getText()).toLowerCase().trim();
+            String userPassword = String.valueOf(password.getText());
+
+            // Check if email field is empty or format is correct
+            if (!userEmail.isEmpty() && Patterns.EMAIL_ADDRESS.matcher(userEmail).matches()) {
+                if (!userPassword.isEmpty()) {
+                    // Check if there is internet connection
+                    if (!NetworkManager.isNetworkAvailable(requireContext())) {
+                        Toast.makeText(getContext(), messages[7], Toast.LENGTH_SHORT).show();
+                        loginButton.setClickable(true);
+                        return;
+                    }
+
+                    mAuth.signInWithEmailAndPassword(userEmail, userPassword)
+                            .addOnSuccessListener(authResult -> {
+                                Toast.makeText(getContext(), messages[0], Toast.LENGTH_SHORT).show();
+                                // Open main login fragment
+
+                                uiController.changeFragment(new HomeFragment());
+                            }).addOnFailureListener(e -> Toast.makeText(getContext(), messages[1], Toast.LENGTH_SHORT).show());
+                } else {
+                    passwordLayout.setEndIconVisible(false);
+                    password.setError(messages[2]);
+                }
+            } else if (userEmail.isEmpty()) {
+                email.setError(messages[3]);
+            } else {
+                email.setError(messages[4]);
+            }
+
+            loginButton.setClickable(true);
+
+        });
+
+        forgotPassword.setOnClickListener(v -> uiController.openBottomSheet(new ForgotPasswordFragment()));
+
+        signUp.setOnClickListener(v -> uiController.openBottomSheet(new SignupFragment()));
+
+    }
+
+    private final TextWatcher loginTextWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            String passwordInput = String.valueOf(password.getText());
+
+            String required = getResources().getString(R.string.required);
+
+            if (passwordInput.isEmpty() && !loginButton.isEnabled()) {
+                passwordLayout.setHelperText(required + "*");
+                passwordLayout.setHelperTextEnabled(true);
+            }
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
+        }
+    };
+
+    private String checkEmptyEmail() {
+        String emailInput = String.valueOf(email.getText()).toLowerCase().trim();
+        String message;
+
+        String required = getResources().getString(R.string.required);
+        String emailInvalid = getResources().getString(R.string.invalid_email);
+
+        if (emailInput.isEmpty()) {
+            message = required + "*";
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+            message = emailInvalid;
+        } else {
+            message = null;
+        }
+
+        return message;
+    }
+
+}========== LOGIN VIEWMODEL ==========
+package com.module.dot.viewModel;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+
+public class LoginViewModel extends ViewModel {
+    private final MutableLiveData<String> email = new MutableLiveData<>();
+    private final MutableLiveData<String> password = new MutableLiveData<>();
+
+    public LiveData<String> getEmail() {
+        return email;
+    }
+
+    public LiveData<String> getPassword() {
+        return password;
+    }
+
+    public void setEmail(String email) {
+        this.email.setValue(email);
+    }
+
+    public void setPassword(String password) {
+        this.password.setValue(password);
+    }
+}
+========== MAIN ACTIVITY ==========
+package com.module.dot.view;
+
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.module.dot.R;
+import com.module.dot.data.local.MyDatabaseManager;
+import com.module.dot.data.local.UserDatabase;
+import com.module.dot.model.User;
+import com.module.dot.utils.FileManager;
+import com.module.dot.utils.Utils;
+import com.module.dot.view.fragments.HomeFragment;
+import com.module.dot.view.fragments.ItemsFragment;
+import com.module.dot.view.fragments.LoginFragment;
+import com.module.dot.view.fragments.OrdersFragment;
+import com.module.dot.view.fragments.SettingsFragment;
+import com.module.dot.view.fragments.TransactionsFragment;
+import com.module.dot.view.fragments.UsersFragment;
+import com.module.dot.view.utils.UIController;
+
+import java.util.Objects;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    private DrawerLayout drawerLayout;
+//    private Intent loginActivity;
+
+    private FirebaseAuth mAuth;
+
+    View navigationHeader;
+    Toolbar toolbar;
+
+    public static User currentUser;
+    UIController uiController;
+    String UID;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = mAuth.getCurrentUser();
+//        FirebaseUser currentFirebaseUser = mAuth.getCurrentUser();
+        uiController = new UIController(this);
+
+
+//        createTables(); // Load data from the database
+//        loadData(); // Load data from the database
+
+        // Find views in the navigation header
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationHeader = navigationView.getHeaderView(0);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+
+        toolbar = findViewById(R.id.toolbar);
+
+        CircleImageView navHeaderImage = navigationHeader.findViewById(R.id.iv_profile_image);
+        TextView navHeaderInitial = navigationHeader.findViewById(R.id.tv_initials);
+        TextView navHeaderFullName = navigationHeader.findViewById(R.id.tv_fullName);
+        TextView navHeaderEmail = navigationHeader.findViewById(R.id.tv_email);
+
+
+
+
+
+        setSupportActionBar(toolbar);
+
+        navigationView.bringToFront();
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView.setNavigationItemSelectedListener(this);
+
+
+
+
+
+
+
+
+        if (user != null) {
+            toolbar.setVisibility(View.VISIBLE);
+
+            // Set Home fragment as default fragment
+            if (savedInstanceState == null) {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
+
+                navigationView.setCheckedItem(R.id.nav_home);
+            }
+
+            UID = user.getUid();
+
+            String imagePath = "Profiles/" + UID;
+            StorageReference storageRef = storage.getReference(imagePath);
+
+            final long ONE_MEGABYTE = 512 * 512;
+            storageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(bytes -> {
+                // Data for "images/island.jpg" is returns, use this as needed
+                Log.i("Firebase", "Successfully retrieved profile image");
+                Drawable profileImage = Utils.byteArrayToDrawable(bytes, getResources());
+                navHeaderInitial.setVisibility(View.GONE);
+                navHeaderImage.setImageDrawable(profileImage);
+            }).addOnFailureListener(exception -> {
+                // Handle any errors
+                Log.e("Firebase", "Error getting profile image", exception);
+
+            });
+
+            // TODO: set navigation header here
+//        navHeaderImage.setImageDrawable();
+
+//        navHeaderFullName.setText("fullName");
+//        navHeaderInitial.setText("X");
+//        navHeaderEmail.setText("email");
+
+
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("users").child(UID);
+
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    // Check if user is an administrator
+                    if(!Objects.equals(dataSnapshot.child("positionTitle").getValue(String.class), "Administrator")){
+                        navigationView.getMenu().findItem(R.id.nav_users).setVisible(false);
+                        navigationView.getMenu().findItem(R.id.nav_transactions).setVisible(false);
+                    }
+
+                    if (dataSnapshot.exists()) {
+                        currentUser = new User(
+                                dataSnapshot.child("globalID").getValue(String.class),
+                                dataSnapshot.child("creatorID").getValue(String.class),
+                                dataSnapshot.child("firstName").getValue(String.class),
+                                dataSnapshot.child("lastName").getValue(String.class),
+                                dataSnapshot.child("email").getValue(String.class),
+                                dataSnapshot.child("companyName").getValue(String.class),
+                                dataSnapshot.child("positionTitle").getValue(String.class),
+                                dataSnapshot.child("profileImagePath").getValue(String.class)
+                        );
+
+                        // TODO: will be a above on a separate module
+
+                        toolbar.setTitle(currentUser.getCompanyName()); // Company Name as the title of the toolbar
+
+                        // Set the navigation header information
+                        navHeaderFullName.setText(dataSnapshot.child("fullName").getValue(String.class));
+                        navHeaderInitial.setText(currentUser.getFirstName());
+                        navHeaderEmail.setText(currentUser.getEmail());
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e("Firebase", "Error getting user data", databaseError.toException());
+                }
+            });
+        } else {
+            toolbar.setVisibility(View.GONE);
+            uiController.changeFragment(new LoginFragment());
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+       final int home = R.id.nav_home;
+       final int users = R.id.nav_users;
+       final int items = R.id.nav_items;
+       final int orders = R.id.nav_orders;
+       final int transactions = R.id.nav_transactions;
+       final int settings = R.id.nav_settings;
+       final int logout = R.id.nav_logout;
+
+        switch (item.getItemId()) {
+            case home:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+                break;
+            case users:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new UsersFragment()).commit();
+                break;
+            case items:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ItemsFragment()).commit();
+                break;
+            case orders:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new OrdersFragment()).commit();
+                break;
+            case transactions:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new TransactionsFragment()).commit();
+                break;
+            case settings:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
+                break;
+            case logout:
+                // Confirmation Message for log out
+                showDialogMessage();
+
+                break;
+        }
+
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void showDialogMessage() {
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setTitle(getResources().getString(R.string.confirm))
+                .setMessage(getResources().getString(R.string.confirm_logout))
+                .setNegativeButton(getResources().getString(R.string.no), (dialog, which) -> {
+                    // When user click on NO
+                    dialog.cancel();
+                })
+                .setPositiveButton(getResources().getString(R.string.yes), (dialog, which) -> {
+                    // When user click on YES
+                    mAuth.signOut(); // Sign out from Server
+
+                    // TODO: Make this block code independent from the firebase
+                    // TODO: Delete all tables and images from the local database
+
+                    // Clean table
+                    try (MyDatabaseManager myDatabaseManager = new UserDatabase(this)){
+                        myDatabaseManager.deleteAll("users");
+                        myDatabaseManager.deleteAll("items");
+                        myDatabaseManager.deleteAll("order_items");
+                        myDatabaseManager.deleteAll("transactions");
+                        myDatabaseManager.deleteAll("orders");
+                        myDatabaseManager.deleteAll("sqlite_sequence");
+                        myDatabaseManager.deleteAll("android_metadata");
+                    } catch (Exception e) {
+                        Log.e("Database", "Error cleaning tables", e);
+                    }
+
+                    FileManager.clearAppCache(this); // Clear the local storage
+
+//                    loginActivity = new Intent(MainActivity.this, LoginActivity.class);
+//                    startActivity(loginActivity);
+//                    finish();
+
+                    uiController.changeFragment(new LoginFragment());
+
+                    // Toast Message for log out
+                    String messages = getResources().getString(R.string.logout);
+
+                    Toast.makeText(this, messages + "!", Toast.LENGTH_SHORT).show();
+
+                }).show();
+
+
+    }
+
+//    private void createTables() {
+//        try (ItemDatabase itemDatabase = new ItemDatabase(this)){
+//            if (!itemDatabase.isTableExists("items")){
+//                itemDatabase.onCreate(itemDatabase.getWritableDatabase()); // Create the database
+//            }
+//        }
+//
+//        try (UserDatabase userDatabase = new UserDatabase(this)){
+//            if (!userDatabase.isTableExists("users")){
+//                userDatabase.onCreate(userDatabase.getWritableDatabase()); // Create the database
+//            }
+//        }
+//
+//        try (OrderItemsDatabase orderItemsDatabase = new OrderItemsDatabase(this)){
+//            if (!orderItemsDatabase.isTableExists("order_items")) {
+//                orderItemsDatabase.onCreate(orderItemsDatabase.getWritableDatabase()); // Create the database
+//            }
+//        }
+//
+//        try (TransactionDatabase transactionDatabase = new TransactionDatabase(this)){
+//            if (!transactionDatabase.isTableExists("transactions")) {
+//                transactionDatabase.onCreate(transactionDatabase.getWritableDatabase()); // Create the database
+//            }
+//        }
+//
+//        try (OrderDatabase orderDatabase = new OrderDatabase(this)){
+//            if (!orderDatabase.isTableExists("orders")) {
+//                orderDatabase.onCreate(orderDatabase.getWritableDatabase()); // Create the database
+//            }
+//        }
+//
+//    }
+
+//    private void loadData(){
+//        FirebaseHandler.readItem("items", this);
+//        FirebaseHandler.readUser( "users", this);
+//        FirebaseHandler.readOrder("orders", this);
+//        FirebaseHandler.readTransaction("transactions", this);
+//    }
+
+    public void enableNavigationViews(int visibility) {
+        toolbar.setVisibility(visibility);
+//        this.recreate();
+    }
+
+}========== DOT APP ==========
+package com.module.dot;
+
+import android.app.Application;
+
+import com.google.firebase.database.FirebaseDatabase;
+import com.module.dot.data.local.ItemDatabase;
+import com.module.dot.data.local.OrderDatabase;
+import com.module.dot.data.local.OrderItemsDatabase;
+import com.module.dot.data.local.TransactionDatabase;
+import com.module.dot.data.local.UserDatabase;
+import com.module.dot.data.remote.FirebaseHandler;
+
+public class DotApp extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+
+        createTables();
+        loadData();
+
+    }
+
+
+    private void createTables() {
+        try (ItemDatabase itemDatabase = new ItemDatabase(this)){
+            if (!itemDatabase.isTableExists("items")){
+                itemDatabase.onCreate(itemDatabase.getWritableDatabase()); // Create the database
+            }
+        }
+
+        try (UserDatabase userDatabase = new UserDatabase(this)){
+            if (!userDatabase.isTableExists("users")){
+                userDatabase.onCreate(userDatabase.getWritableDatabase()); // Create the database
+            }
+        }
+
+        try (OrderItemsDatabase orderItemsDatabase = new OrderItemsDatabase(this)){
+            if (!orderItemsDatabase.isTableExists("order_items")) {
+                orderItemsDatabase.onCreate(orderItemsDatabase.getWritableDatabase()); // Create the database
+            }
+        }
+
+        try (TransactionDatabase transactionDatabase = new TransactionDatabase(this)){
+            if (!transactionDatabase.isTableExists("transactions")) {
+                transactionDatabase.onCreate(transactionDatabase.getWritableDatabase()); // Create the database
+            }
+        }
+
+        try (OrderDatabase orderDatabase = new OrderDatabase(this)){
+            if (!orderDatabase.isTableExists("orders")) {
+                orderDatabase.onCreate(orderDatabase.getWritableDatabase()); // Create the database
+            }
+        }
+
+    }
+
+    private void loadData(){
+        FirebaseHandler.readItem("items", this);
+        FirebaseHandler.readUser( "users", this);
+        FirebaseHandler.readOrder("orders", this);
+        FirebaseHandler.readTransaction("transactions", this);
+    }
+}
+========== ITEM ADAPTER ==========
+package com.module.dot.view.adapters;
+
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.module.dot.utils.FileManager;
+import com.module.dot.utils.LocalFormat;
+import com.module.dot.R;
+import com.module.dot.model.Item;
+import com.module.dot.view.fragments.HomeFragment;
+
+import java.util.ArrayList;
+
+public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
+    private final ArrayList<Item> items;
+    private final Context context;
+    private HomeFragment homeFragment;
+
+    public ItemAdapter(ArrayList<Item> items, Context context) {
+        this.items = items;
+        this.context = context;
+    }
+
+    public ItemAdapter(ArrayList<Item> items, Context context, HomeFragment homeFragment) { // Modify this line
+        this.items = items;
+        this.context = context;
+        this.homeFragment = homeFragment; // Add this line
+    }
+
+    @NonNull
+    @Override
+    public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_design, parent, false);
+        return new ItemViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
+        Drawable itemImage;
+
+        if (items.get(position).getImagePath() != null) {
+            itemImage = FileManager.loadImageLocally(context, "Items", items.get(position).getImagePath());
+        } else {
+            // Default image
+            // TODO: Use category image when item image is not available
+            itemImage = ContextCompat.getDrawable(context, R.drawable.baseline_no_image_24);
+        }
+
+        holder.ItemImageView.setImageDrawable(itemImage);
+        holder.ItemNameTextView.setText(items.get(position).getName());
+        holder.priceTextView.setText(LocalFormat.getCurrencyFormat(items.get(position).getPrice()));
+        holder.unitTypeTextView.setText((items.get(position).getUnitType()));
+        holder.backgroundColor.setBackgroundColor(0); // TODO: Set the background color
+
+
+        holder.itemLayout.setOnClickListener(v -> {
+            if(homeFragment != null) {
+                Item selectedItem = new Item(
+                        items.get(position).getGlobalID(),
+                        items.get(position).getName(),
+                        items.get(position).getPrice(),
+                        items.get(position).getTax(),
+                        items.get(position).getSku(),
+                        1L
+                );
+
+                // TODO: Optimize - All the line below can be part of addToSElected Item method
+                double itemSelectedPrice = items.get(position).getPrice();
+                double tax = (items.get(position).getTax() / 100) * itemSelectedPrice;
+
+                homeFragment.totalItem++;
+
+                homeFragment.addToSelectedItems(selectedItem);
+                homeFragment.updateTax(tax);
+                homeFragment.updateAmount(itemSelectedPrice);
+            }
+
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
+
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        LinearLayout itemLayout;
+        ImageView ItemImageView;
+        TextView ItemNameTextView;
+        TextView priceTextView;
+        TextView unitTypeTextView;
+        CardView backgroundColor;
+
+        public ItemViewHolder(View itemView) {
+            super(itemView);
+            itemLayout = itemView.findViewById(R.id.itemLL);
+            ItemImageView = itemView.findViewById(R.id.itemImageDesign);
+            ItemNameTextView = itemView.findViewById(R.id.itemNameHolderDesign);
+            priceTextView = itemView.findViewById(R.id.itemPriceHolderDesign);
+            unitTypeTextView = itemView.findViewById(R.id.itemUnitTypeHolderDesign);
+            backgroundColor = itemView.findViewById(R.id.ItemBackgroundColor);
+        }
+    }
+}========== ITEM DESIGN ==========
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/itemLL"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".view.adapters.ItemAdapter">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/ItemBackgroundColor"
+        android:layout_width="110dp"
+        android:layout_height="130dp"
+        app:cardElevation="20dp"
+        app:cardCornerRadius="10dp"
+        android:backgroundTint="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <ImageView
+                android:id="@+id/itemImageDesign"
+                android:layout_width="90dp"
+                android:layout_height="68dp"
+                android:contentDescription="@string/item"
+                android:src="@drawable/baseline_image_24"
+                app:civ_border_color="@color/black"
+                app:civ_border_width="2dp"
+                app:layout_constraintBottom_toTopOf="@+id/itemNameHolderDesign"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+            <TextView
+                android:id="@+id/itemNameHolderDesign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="27dp"
+                android:text="@string/name"
+                android:textColor="#546E7A"
+                android:textSize="11sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/itemPriceHolderDesign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="84dp"
+                android:text="@string/price"
+                android:textColor="#546E7A"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="SmallSp" />
+
+            <TextView
+                android:id="@+id/itemUnitTypeHolderDesign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="100dp"
+                android:text="@string/unit_type"
+                android:textColor="#546E7A"
+                android:textSize="5sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="SmallSp" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>========== ITEMS LAYOUT ==========
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".view.fragments.ItemsFragment">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="20dp"
+        app:cardCornerRadius="15dp"
+        app:cardElevation="20dp">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="40dp"
+            android:backgroundTint="@color/black"
+            android:contentDescription="@string/new_item"
+            android:src="@drawable/baseline_add_24"
+            app:tint="@color/white"
+            tools:ignore="ImageContrastCheck" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="30dp"
+            android:text="@string/item"
+            android:textAllCaps="true"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:id="@+id/noDataItemFragmentLL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:alpha="0.1"
+                android:contentDescription="@string/no_data_message"
+                app:srcCompat="@drawable/ic_empty"
+                tools:ignore="ImageContrastCheck" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:alpha="0.4"
+                android:text="@string/no_items"
+                android:textSize="20sp"
+                tools:ignore="TextContrastCheck" />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/itemList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="35dp"
+            android:visibility="visible"
+            android:gravity="top"
+            tools:listitem="@layout/item_design"/>
+
+    </androidx.cardview.widget.CardView>
+
+</RelativeLayout>========== LOGIN LAYOUT ==========
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".view.fragments.LoginFragment">
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="150dp"
+        android:layout_height="90dp"
+        android:contentDescription="@string/logo"
+        app:srcCompat="@drawable/logo"
+        tools:ignore="ImageContrastCheck" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="@string/log_in_to_your_account"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="11sp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/emailLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="290dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/email"
+
+        android:textColorHint="@color/dark_gray"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/dark_gray"
+        app:cursorColor="@color/black"
+        app:endIconMode="clear_text"
+        app:helperText=""
+        app:helperTextTextColor="@color/red"
+        app:hintTextColor="@color/dark_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:placeholderText="example@email.com"
+        app:placeholderTextColor="@color/dark_gray"
+        app:startIconDrawable="@drawable/baseline_email_24">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:inputType="textEmailAddress"
+            android:textColor="@color/black"
+            android:textColorHint="@color/dark_gray" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/passwordLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="290dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="@string/password"
+        android:textColorHint="@color/dark_gray"
+        app:boxBackgroundColor="@color/white"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/dark_gray"
+        app:cursorColor="@color/black"
+        app:endIconMode="password_toggle"
+        app:helperText=""
+        app:helperTextTextColor="@color/red"
+        app:hintTextColor="@color/dark_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:placeholderTextColor="@color/dark_gray"
+        app:startIconDrawable="@drawable/baseline_lock_24">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:inputType="textPassword"
+            android:textColor="@color/black"
+            android:textColorHint="@color/dark_gray" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="290dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/black"
+        android:text="@string/login"
+        android:layout_marginTop="10dp"
+        android:textColor="#FFFFFF"
+        tools:ignore="TextContrastCheck" />
+
+    <TextView
+        android:id="@+id/forgotPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:linksClickable="true"
+        android:minHeight="48dp"
+        android:text="@string/forgot_your_password"
+        android:textColor="@color/black"
+        android:textSize="11sp"
+        tools:ignore="TextContrastCheck" />
+
+    <LinearLayout
+        android:id="@+id/signUpLoginLL"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:minHeight="48dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/don_t_have_an_account"
+            android:textColor="@color/black"
+            android:textSize="11sp"
+            tools:ignore="TextContrastCheck" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:linksClickable="true"
+            android:text="@string/sign_up"
+            android:textColor="@color/black"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:ignore="TextContrastCheck" />
+
+    </LinearLayout>
+
+</LinearLayout>========== ACTIVITY MAIN ==========
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".view.MainActivity"
+    tools:openDrawer="start">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/black"
+            android:elevation="4dp"
+            android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+        <FrameLayout
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/white"
+        app:headerLayout="@layout/nav_header"
+        app:itemIconTint="@color/black"
+        app:itemTextColor="@color/black"
+        app:menu="@menu/nav_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>========== ORDER DATABASE ==========
+package com.module.dot.data.local;
+
+import static com.module.dot.utils.LocalFormat.getCurrentDateTime;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
+
+import com.module.dot.model.Item;
+import com.module.dot.model.Order;
+
+import java.util.ArrayList;
+
+public class OrderDatabase extends MyDatabaseManager {
+    // Order Table
+    private static final String ORDERS_TABLE_NAME = "orders";
+    private static final String ORDER_COLUMN_GLOBAL_ID = "global_id";
+    private static final String ORDER_COLUMN_ID = "_id";
+    private static final String ORDER_COLUMN_CREATOR_ID = "order_creator";
+    private static final String ORDER_COLUMN_DATE = "order_date";
+    private static final String ORDER_COLUMN_TIME = "order_time";
+    private static final String ORDER_COLUMN_TOTAL_AMOUNT = "total_amount";
+    private static final String ORDER_COLUMN_TOTAL_ITEM = "total_item";
+    private static final String ORDER_COLUMN_STATUS = "order_status";
+
+    private static final String NAME_TABLE_USERS = "users";
+    private static final String ID_COLUMN_USERS = "user_id";
+
+    public OrderDatabase(@Nullable Context context) {
+        super(context);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+
+    public void createTable(SQLiteDatabase db){
+        // SQL query to create the "orders" table
+        String query_orders = "CREATE TABLE " + ORDERS_TABLE_NAME +
+                " (" + ORDER_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                ORDER_COLUMN_GLOBAL_ID + " TEXT NOT NULL UNIQUE, " +
+                ORDER_COLUMN_CREATOR_ID + " INTEGER NOT NULL, " +
+                ORDER_COLUMN_DATE + " DATE, " +
+                ORDER_COLUMN_TIME + " TIME, " +
+                ORDER_COLUMN_TOTAL_AMOUNT + " REAL NOT NULL, " +
+                ORDER_COLUMN_TOTAL_ITEM + " INTEGER, " +
+                ORDER_COLUMN_STATUS + " TEXT NOT NULL, " +
+                " FOREIGN KEY (" + ORDER_COLUMN_CREATOR_ID
+                + ") REFERENCES " + NAME_TABLE_USERS + " (" + ID_COLUMN_USERS + "));";
+
+        db.execSQL(query_orders);
+
+        Log.i("OrderDatabase", "Creating orders table...");
+    }
+
+    public long createOrder(Order newOrder){
+        long newOrderId = -1;
+
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+
+            if (!isValueExists(db, ORDERS_TABLE_NAME, ORDER_COLUMN_GLOBAL_ID, newOrder.getGlobalID())) {
+                ContentValues cv = new ContentValues();
+
+                String[] dateTime = getCurrentDateTime(); // Get the current date and time
+
+                cv.put(ORDER_COLUMN_GLOBAL_ID, newOrder.getGlobalID());
+                cv.put(ORDER_COLUMN_CREATOR_ID, newOrder.getCreatorID());
+                cv.put(ORDER_COLUMN_TOTAL_AMOUNT, newOrder.getOrderTotalAmount());
+                cv.put(ORDER_COLUMN_TOTAL_ITEM, newOrder.getOrderTotalItems());
+                cv.put(ORDER_COLUMN_STATUS, newOrder.getOrderStatus());
+                cv.put(ORDER_COLUMN_DATE, dateTime[0]);
+                cv.put(ORDER_COLUMN_TIME, dateTime[1]);
+
+                // Insert the order into the database
+                newOrderId = db.insertOrThrow(ORDERS_TABLE_NAME, null, cv);
+
+                if (newOrderId != -1) {
+                    Log.i("MyDatabaseManager", "Order Added Successfully!");
+                } else {
+                    Log.i("MyDatabaseManager", "Failed to add order!");
+                }
+            }
+
+
+        } catch (SQLiteException e) {
+            Log.e("MyDatabaseManager", "Failed to add order: " + e.getMessage());
+            throw e;
+        }
+
+        return newOrderId;
+
+    }
+
+    public void readOrder(ArrayList<Order> orderArrayList){
+        // Get a cursor to the order data in the database
+        Cursor cursor = super.readAllData(ORDERS_TABLE_NAME);
+
+        // If the database is not empty, populate the ArrayList with order data
+        while (cursor.moveToNext()) {
+            String orderGlobalID = cursor.getString(1);
+
+            ArrayList<Item> selectedItemList;
+
+            try (OrderItemsDatabase orderItemsDatabase = new OrderItemsDatabase(context)){
+                if (!orderItemsDatabase.isTableExists("order_items")) {
+                    orderItemsDatabase.onCreate(orderItemsDatabase.getWritableDatabase()); // Create the database
+                    return;
+                } else {
+                    selectedItemList = orderItemsDatabase.readOrderItems(orderGlobalID, context);
+                    Log.d("OrderDatabaseTEST", "readOrder: " + selectedItemList.size());
+                }
+
+            } catch (Exception e) {
+                Log.e("OrderDatabase", "Failed to read order items: " + e.getMessage());
+                throw e;
+            }
+
+            // Log selectedItemList
+//            for(Item item : selectedItemList){
+//                Log.i("OrderDatabaseTEST", "Item: " + item.getName());
+//            }
+
+            Order order = new Order(
+                    orderGlobalID,
+                    cursor.getLong(0), // Order Local ID
+                    cursor.getString(3), // Order Date
+                    cursor.getString(4), // Order Time
+                    cursor.getString(7), // Order Status
+                    cursor.getLong(6),    // Total Item
+                    cursor.getDouble(5), // Total Amount
+                    selectedItemList // Selected Item
+            );
+
+
+            orderArrayList.add(order); // Add the order to the ArrayList
+        }
+
+
+    }
+
+    int getTotalItems(ArrayList<Item> selectedItemList){
+        int totalItems = 0 ;
+
+        // Find the total number of items in the order
+        for(Item item : selectedItemList){
+            totalItems += item.getQuantity();
+        }
+
+        return totalItems;
+    }
+
+    /**
+     * Retrieves details of orders with a specific order number from a database and populates
+     * them into an ArrayList of Orders objects. This method queries the provided database
+     * for orders matching the given orderGlobalID. The retrieved order details are encapsulated
+     * into an Orders object, and all matching orders are added to the provided ArrayList.
+     *
+     * @param orderGlobalID The specific order number for which details are to be retrieved.
+     */
+    public Order getOrderDetails(String orderGlobalID) {
+        // Get a cursor to the order data in the database
+        Cursor cursor = super.readAllData(ORDERS_TABLE_NAME);
+        Order order = null;
+
+        while (cursor.moveToNext()) {
+            ArrayList<Item> selectedItemList;
+
+            try (OrderItemsDatabase orderItemsDatabase = new OrderItemsDatabase(context)){
+                selectedItemList = orderItemsDatabase.readOrderItems(orderGlobalID, context);
+            } catch (Exception e) {
+                Log.e("OrderDatabase", "Failed to read order items: " + e.getMessage());
+                throw e;
+            }
+
+            Log.d("OrderDatabaseTEST", "readOrder: " + selectedItemList.get(0).getName());
+
+            order = new Order(
+                    orderGlobalID,
+                    cursor.getLong(0), // Order Local ID
+                    cursor.getString(3), // Order Date
+                    cursor.getString(4), // Order Time
+                    cursor.getString(7), // Order Status
+                    cursor.getLong(6),    // Total Item
+                    cursor.getDouble(5), // Total Amount
+                    selectedItemList // Selected Item
+            );
+        }
+
+        cursor.close();
+
+        return order;
+    }
+
+    public long getOrderId(String orderGlobalID) {
+        long orderId = -1;
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Define a projection that specifies which columns from the database
+        // you will actually use after this query.
+        String[] projection = {ORDER_COLUMN_ID};
+
+        // Filter results WHERE "global_id" = 'orderGlobalID'
+        String selection = ORDER_COLUMN_GLOBAL_ID + " = ?";
+        String[] selectionArgs = {orderGlobalID};
+
+        Cursor cursor = db.query(
+                ORDERS_TABLE_NAME,   // The table to query
+                projection,             // The array of columns to return (pass null to get all)
+                selection,              // The columns for the WHERE clause
+                selectionArgs,          // The values for the WHERE clause
+                null,                   // don't group the rows
+                null,                   // don't filter by row groups
+                null               // The sort order
+        );
+
+        if (cursor.moveToFirst()) {
+            orderId = cursor.getLong(cursor.getColumnIndexOrThrow(ORDER_COLUMN_ID));
+        }
+        cursor.close();
+        return orderId;
+    }
+
+
+
+    public void updateOrder(){
+
+    }
+
+    public void deleteOrder(){
+
+    }
+}
+========== ORDER ITEMS DATABASE ==========
+package com.module.dot.data.local;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
+
+import com.module.dot.model.Item;
+
+import java.util.ArrayList;
+
+public class OrderItemsDatabase extends MyDatabaseManager {
+    // Order Item Table
+    private static final String ORDER_ITEMS_TABLE_NAME = "order_items";
+    private static final String ORDER_ITEM_COLUMN_ID = "_id";
+    private static final String ORDER_COLUMN_GLOBAL_ID = "order_global_id";
+    private static final String GLOBAL_ID_COLUMN_ITEMS = "item_global_id";
+    private static final String ORDER_ITEM_COLUMN_ITEM_PRICE = "item_price";
+    private static final String ORDER_ITEM_COLUMN_QUANTITY = "item_quantity";
+
+    private static final String NAME_TABLE_ITEMS = "items";
+    private static final String ORDERS_TABLE_NAME = "orders";
+    private static final String ID_COLUMN_ITEMS = "_id";
+    private static final String ORDER_COLUMN_ID = "_id";
+
+
+
+    public OrderItemsDatabase(@Nullable Context context) {
+        super(context);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+
+    protected void createTable(SQLiteDatabase db){
+        // SQL query to create the "selected_items" table
+        String query_order_items = "CREATE TABLE " + ORDER_ITEMS_TABLE_NAME +
+                " (" + ORDER_ITEM_COLUMN_ID + " TEXT PRIMARY KEY, " +
+                ORDER_COLUMN_GLOBAL_ID + " TEXT NOT NULL, " +
+                GLOBAL_ID_COLUMN_ITEMS + " TEXT NOT NULL, " + // Add the item ID column
+                ORDER_ITEM_COLUMN_ITEM_PRICE + " REAL, " +
+                ORDER_ITEM_COLUMN_QUANTITY + " INTEGER NOT NULL, " +
+                " FOREIGN KEY (" + ORDER_COLUMN_GLOBAL_ID +
+                ") REFERENCES " + ORDERS_TABLE_NAME + " (" + ORDER_COLUMN_ID + "), " +
+                " FOREIGN KEY (" + GLOBAL_ID_COLUMN_ITEMS +
+                ") REFERENCES " + NAME_TABLE_ITEMS + " (" + ID_COLUMN_ITEMS + "));";
+
+        db.execSQL(query_order_items);
+
+        Log.i("OrderItemDatabase", "Creating orderItem table...");
+    }
+
+    public void createOrderItems (String selectedItemID, String orderGlobalID, Item item) throws SQLiteException {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            // Check if the specified column value already exists in the database
+            if (!isValueExists(db, ORDER_ITEMS_TABLE_NAME, ORDER_ITEM_COLUMN_ID, selectedItemID)) {
+                ContentValues cv = new ContentValues();
+
+                cv.put(ORDER_ITEM_COLUMN_ID, selectedItemID);
+                cv.put(ORDER_COLUMN_GLOBAL_ID, orderGlobalID);
+                cv.put(GLOBAL_ID_COLUMN_ITEMS, item.getGlobalID()); // Make sure to provide the correct item ID
+                cv.put(ORDER_ITEM_COLUMN_ITEM_PRICE, item.getPrice());
+                cv.put(ORDER_ITEM_COLUMN_QUANTITY, item.getQuantity());
+
+                long result = db.insertOrThrow(ORDER_ITEMS_TABLE_NAME, null, cv);
+
+                if (result != -1) {
+                    Log.i("MyDatabaseManager", "Order Item Added Successfully!");
+                }
+            } else {
+                Log.i("MyDatabaseManager", "Order Item Already Exists!");
+            }
+
+        } catch (SQLiteException e) {
+            Log.e("MyDatabaseManager", "Failed to add order item: " + e.getMessage());
+            throw e;
+        }
+
+    }
+
+    public ArrayList<Item> readOrderItems(String orderGlobalID, Context context){
+        ArrayList<Item> itemList = new ArrayList<>();
+        Cursor cursor = getItemsByOrderGlobalId(orderGlobalID);
+        ItemDatabase itemDatabase = new ItemDatabase(context);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String itemGlobalID = cursor.getString(2);
+                String imagePath = cursor.getString(2);
+                String itemName = itemDatabase.getItemName(itemGlobalID); // TODO: Get the item name from the database
+                double itemPrice = cursor.getDouble(3);
+                long quantity = cursor.getLong(4);
+
+                Item item = new Item(itemGlobalID, imagePath, itemName, itemPrice, quantity);
+                itemList.add(item);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+
+        return itemList;
+    }
+
+    public Cursor getItemsByOrderGlobalId(String orderGlobalId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + ORDER_ITEMS_TABLE_NAME +
+                " WHERE " + ORDER_COLUMN_GLOBAL_ID + " = ?";
+
+        return db.rawQuery(query, new String[]{orderGlobalId});
+    }
+
+}
+========== ORDER MODEL ==========
+package com.module.dot.model;
+
+
+import com.module.dot.model.Item;
+
+import java.util.ArrayList;
+
+public class Order {
+    private String globalID;
+    private long orderNumber;
+    private String orderDate;
+    private String orderTime;
+    private String orderStatus;
+    private Long orderTotalItems;
+    private Double orderTotalAmount;
+    private String creatorID;
+
+    private ArrayList<Item> selectedItemList;
+
+    public Order() {
+    }
+
+    // Constructor for displaying orders
+    public Order(String globalID, long orderNumber, String orderDate, String orderTime, String orderStatus,
+                 Long orderTotalItems, Double orderTotalAmount, ArrayList<Item> selectedItemList) {
+        this.globalID = globalID;
+        this.orderNumber = orderNumber;
+        this.orderDate = orderDate;
+        this.orderTime = orderTime;
+        this.orderStatus = orderStatus;
+        this.orderTotalItems = orderTotalItems;
+        this.orderTotalAmount = orderTotalAmount;
+        this.selectedItemList = selectedItemList;
+    }
+
+    // Constructor for creating a new order
+    public Order(String globalID, String creatorID, String date, String time, Double orderTotalAmount,
+                 Long orderTotalItems, String orderStatus) {
+        this.globalID = globalID;
+        this.creatorID = creatorID;
+        this.orderDate = date;
+        this.orderTime = time;
+        this.orderStatus = orderStatus;
+        this.orderTotalAmount = orderTotalAmount;
+        this.orderTotalItems = orderTotalItems;
+    }
+
+    // Constructor for creating a new order
+    public Order(String creatorID, String date, String time, double orderTotalAmount,
+                 Long orderTotalItems, String orderStatus, ArrayList<Item> selectedItemList) {
+        this.creatorID = creatorID;
+        this.orderDate = date;
+        this.orderTime = time;
+        this.orderTotalAmount = orderTotalAmount;
+        this.orderTotalItems = orderTotalItems;
+        this.orderStatus = orderStatus;
+        this.selectedItemList = selectedItemList;
+    }
+
+    public String getGlobalID() {
+        return globalID;
+    }
+
+    public void setGlobalID(String globalID) {
+        this.globalID = globalID;
+    }
+
+    public long getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(long orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public String getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(String orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public String getOrderTime() {
+        return orderTime;
+    }
+
+    public void setOrderTime(String orderTime) {
+        this.orderTime = orderTime;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public Long getOrderTotalItems() {
+        return orderTotalItems;
+    }
+
+    public void setOrderTotalItems(Long orderTotalItems) {
+        this.orderTotalItems = orderTotalItems;
+    }
+
+    public Double getOrderTotalAmount() {
+        return orderTotalAmount;
+    }
+
+    public void setOrderTotalAmount(Double orderTotalAmount) {
+        this.orderTotalAmount = orderTotalAmount;
+    }
+
+    public String getCreatorID() {
+        return creatorID;
+    }
+
+    public void setCreatorID(String creatorID) {
+        this.creatorID = creatorID;
+    }
+
+    public ArrayList<Item> getSelectedItemList() {
+        return selectedItemList;
+    }
+
+    public void setSelectedItemList(ArrayList<Item> selectedItemList) {
+        this.selectedItemList = selectedItemList;
+    }
+}
+========== LOCAL FORMAT ==========
+package com.module.dot.utils;
+
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class LocalFormat {
+    // System will check what language and country the device is set on
+    // System will cache the data
+
+    static SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
+    static SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.US);
+
+    // Currency
+    private static final Locale localCountry = Locale.US;
+//    private static final Locale localCountry = Locale.FRANCE;
+//    private static final Locale localCountry = new Locale("fr", "HT");
+
+
+    public static String getCurrencyFormat(double amount){
+        NumberFormat usDollarFormat = NumberFormat.getCurrencyInstance(localCountry);
+        return usDollarFormat.format(amount);
+    }
+
+
+    /**
+     *
+     * @return An array containing the formatted date and time. The first element
+     *         in the array is the date and the second element is the time.
+     */
+    public static String[] getCurrentDateTime() {
+        // Get the current date and time.
+        Date date = new Date();
+
+        // Get the formatted date and time.
+        String formattedDate = dateFormat.format(date);
+        String formattedTime = timeFormat.format(date);
+
+        // Create an array to store the formatted date and time.
+        String[] dateTime = new String[2];
+
+        dateTime[0] = formattedDate;
+        dateTime[1] = formattedTime;
+
+        // Return the array.
+        return dateTime;
+    }
+
+}
+========== GOOGLE SERVICES EXISTS ==========
+YES - google-services.json exists
