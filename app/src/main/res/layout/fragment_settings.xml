@@ -79,6 +79,25 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="تذييل الفاتورة">
+                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/settingsReceiptFooter" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/settingsSecurityWarning"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/badge_warning"
+                    android:padding="12dp"
+                    android:text="تنبيه أمان: ما زالت كلمة المرور الافتراضية 123456 مستخدمة. غيّرها الآن قبل التشغيل التجاري."
+                    android:textColor="#5B4500"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:hint="كلمة مرور جديدة (اختياري)" app:endIconMode="password_toggle">
                     <com.google.android.material.textfield.TextInputEditText android:id="@+id/settingsPassword" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -88,6 +107,29 @@
                     android:layout_width="match_parent" android:layout_height="58dp" android:layout_marginTop="14dp"
                     android:text="حفظ بيانات المالك والإعدادات" android:textColor="@color/white" android:textStyle="bold"
                     app:backgroundTint="@color/brand_primary" app:cornerRadius="16dp" app:icon="@drawable/baseline_check_24" app:iconTint="@color/white" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            app:cardBackgroundColor="@color/brand_navy" app:cardCornerRadius="20dp" app:cardElevation="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="14dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ملخص الأعمال" android:textColor="@color/white" android:textSize="18sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="أرقام مباشرة من قاعدة البيانات المحلية" android:textColor="#C9D9EA" android:textSize="12sp" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="إجمالي المبيعات" android:textColor="#C9D9EA" android:textSize="11sp" />
+                        <TextView android:id="@+id/settingsLifetimeSales" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="0 ر.ي" android:textColor="@color/white" android:textStyle="bold" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="إجمالي الربح" android:textColor="#C9D9EA" android:textSize="11sp" />
+                        <TextView android:id="@+id/settingsLifetimeProfit" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="0 ر.ي" android:textColor="@color/white" android:textStyle="bold" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="قيمة المخزون" android:textColor="#C9D9EA" android:textSize="11sp" />
+                        <TextView android:id="@+id/settingsInventoryValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="0 ر.ي" android:textColor="@color/white" android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -122,7 +164,7 @@
                 <TextView
                     android:id="@+id/settingsVersion"
                     android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
-                    android:text="الإصدار 3.0.0" android:textColor="#A9DCC9" android:textSize="11sp" />
+                    android:text="الإصدار 4.0.0" android:textColor="#A9DCC9" android:textSize="11sp" />
 
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
                     <com.google.android.material.button.MaterialButton

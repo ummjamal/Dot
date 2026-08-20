@@ -179,7 +179,7 @@
         باستخدام تطبيق بقالة الشعيبي فإنك توافق على استخدام النظام لإدارة المنتجات والمخزون والمبيعات بطريقة نظامية. يجب الحفاظ على بيانات الدخول وعدم مشاركتها مع أشخاص غير مخولين.
     </string>
 
-    <!-- V3 branding and ownership -->
+    <!-- V4 branding and ownership -->
     <string name="owner_default_name">علي صالح الشعيبي</string>
     <string name="owner_default_email">alisaleh10302040@gmail.com</string>
     <string name="owner_role">مالك ومدير البقالة</string>

@@ -17,3 +17,7 @@ local.properties
 *.apk
 *.jks
 *.keystore
+# Local update/source bundles and release copies
+Baqalat-Alshuibi-V*-update.tar.gz
+Baqalat-Alshuibi-V*-current-source.tar.gz
+Baqalat-Alshuibi-V*-FINAL*.apk

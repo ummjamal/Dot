@@ -14,27 +14,31 @@
     <color name="pink_gold">#FFF7DF</color>
     <color name="dark_yellow">#D99500</color>
 
-    <!-- Al-Shuaibi V3 brand palette -->
-    <color name="brand_primary">#0C7A55</color>
-    <color name="brand_primary_dark">#07553D</color>
-    <color name="brand_primary_deep">#043E2D</color>
-    <color name="brand_primary_soft">#E4F5EE</color>
-    <color name="brand_secondary">#E5AD24</color>
-    <color name="brand_secondary_dark">#9A6D00</color>
-    <color name="brand_secondary_soft">#FFF3CF</color>
-    <color name="brand_blue">#2E70C2</color>
-    <color name="brand_blue_soft">#E8F1FC</color>
-    <color name="brand_coral">#D85C50</color>
-    <color name="brand_coral_soft">#FCECE9</color>
-    <color name="brand_purple">#6C58B9</color>
-    <color name="brand_purple_soft">#EEEAFB</color>
-    <color name="brand_background">#F4F8F6</color>
+    <!-- Al-Shuaibi V4 Ultimate brand palette -->
+    <color name="brand_primary">#08745A</color>
+    <color name="brand_primary_dark">#04503F</color>
+    <color name="brand_primary_deep">#033B30</color>
+    <color name="brand_primary_soft">#E3F7F0</color>
+    <color name="brand_secondary">#F2B134</color>
+    <color name="brand_secondary_dark">#8E6200</color>
+    <color name="brand_secondary_soft">#FFF1C7</color>
+    <color name="brand_blue">#2F6BFF</color>
+    <color name="brand_blue_soft">#EAF0FF</color>
+    <color name="brand_coral">#EC5A5A</color>
+    <color name="brand_coral_soft">#FDECEC</color>
+    <color name="brand_purple">#7259D9</color>
+    <color name="brand_purple_soft">#F0EDFF</color>
+    <color name="brand_background">#F3F8F6</color>
     <color name="brand_surface">#FFFFFFFF</color>
     <color name="brand_surface_alt">#F8FBF9</color>
-    <color name="brand_text">#14231C</color>
-    <color name="brand_text_secondary">#617067</color>
-    <color name="brand_success">#248A4D</color>
-    <color name="brand_warning">#D89300</color>
-    <color name="brand_error">#C83F3F</color>
-    <color name="brand_divider">#E2EAE6</color>
+    <color name="brand_text">#10221A</color>
+    <color name="brand_text_secondary">#607269</color>
+    <color name="brand_success">#1F9254</color>
+    <color name="brand_warning">#D99500</color>
+    <color name="brand_error">#D74242</color>
+    <color name="brand_divider">#DDE9E4</color>
+    <color name="brand_teal">#0B8E7A</color>
+    <color name="brand_teal_soft">#DFF7F3</color>
+    <color name="brand_navy">#153B66</color>
+    <color name="brand_shadow">#18000000</color>
 </resources>
