@@ -69,12 +69,15 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         if (item.getStock() <= 0) {
             holder.stock.setText("نافد");
             holder.stock.setTextColor(ContextCompat.getColor(context, R.color.brand_error));
+            holder.stock.setBackgroundResource(R.drawable.badge_error);
         } else if (item.getStock() <= item.getMinStock()) {
             holder.stock.setText("متبقي " + item.getStock());
             holder.stock.setTextColor(ContextCompat.getColor(context, R.color.brand_warning));
+            holder.stock.setBackgroundResource(R.drawable.badge_warning);
         } else {
             holder.stock.setText("المخزون " + item.getStock());
             holder.stock.setTextColor(ContextCompat.getColor(context, R.color.brand_success));
+            holder.stock.setBackgroundResource(R.drawable.badge_success);
         }
 
         holder.itemLayout.setOnClickListener(v -> {

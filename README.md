@@ -1,76 +1,51 @@
-# Dot - Inventory Management App
+# الشعيبي لإدارة البقالة — V3
 
-Dot is an Inventory Management mobile app developed in Java and XML for Android devices. It empowers businesses to efficiently manage their inventory, streamline order processing, generate invoices, and gain valuable insights into inventory levels and sales trends. With barcode scanning functionality, Dot makes inventory management a breeze.
+تطبيق Android عربي لإدارة **بقالة الشعيبي** في الضالع – اليمن. يعمل محليًا دون الحاجة إلى اتصال دائم بالإنترنت، ويجمع إدارة الأصناف والمخزون والبيع والفواتير والربح والنسخ الاحتياطي في تطبيق واحد.
 
-![Dot Logo](./app/src/main/res/drawable/logo.png)
+## أهم الوظائف
 
-## Table of Contents
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [License](#license)
+- واجهة عربية RTL وهوية بصرية موحدة.
+- لوحة يومية: المبيعات، الربح، عدد العمليات، وتنبيهات المخزون.
+- إضافة وتعديل وحذف الأصناف مع الصورة والقسم والباركود والوحدة.
+- سعر شراء وسعر بيع وكمية وحد تنبيه للمخزون.
+- بحث سريع في الأصناف.
+- ماسح باركود مدمج مع فلاش وإدخال يدوي.
+- سلة بيع مع منع تجاوز الكمية المتاحة.
+- إتمام البيع داخل Transaction واحدة ثم خصم المخزون وتسجيل الحركة والربح.
+- سجل فواتير وسجل مبيعات.
+- إعدادات المالك والمتجر.
+- نسخ احتياطي واستعادة لقاعدة البيانات وصور الأصناف عبر Storage Access Framework.
+- لا يعتمد التشغيل الأساسي على Firebase أو خدمة سحابية خارجية.
 
-## Features
+## الهوية
 
-- **Inventory Tracking**: Keep a close eye on your inventory levels, ensuring you never run out of stock.
-- **Order Management**: Efficiently process and manage orders from customers.
-- **Invoice Generation**: Generate invoices for completed orders, making your business transaction seamless.
-- **Sales Insights**: Get valuable insights into your inventory and sales trends.
-- **Barcode Scanning**: Easily update inventory using barcode scanning capabilities.
+- اسم التطبيق: **الشعيبي لإدارة البقالة**
+- المتجر الافتراضي: **بقالة الشعيبي**
+- المالك والمدير: **علي صالح الشعيبي**
+- Application ID: `com.alshuibi.grocery`
 
-## Installation
+## البناء
 
-1. Clone the repository:
+- Android compile/target SDK: 36
+- minSdk: 24
+- Java: 17
+- Gradle Wrapper: 8.11.1
+- Android Gradle Plugin: 8.10.1
 
-    ```shell
-    git clone https://github.com/wiscarlens/dot
-    ```
+بناء نسخة اختبار:
 
-2. Open the project in Android Studio.
+```bash
+./gradlew --no-daemon --max-workers=1 testDebugUnitTest lintDebug assembleDebug
+```
 
-3. Build and run the app on an Android emulator or physical device.
+مسار APK:
 
-## Usage
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
 
-1. Launch the Dot app on your Android device.
+## ملاحظة أمنية
 
-2. Sign in or create a new account if you haven't already.
+فريق التطوير ظاهر داخل صفحة الإعدادات للتعريف والدعم فقط. لا توجد صلاحية خفية أو حساب مطور خلفي، وتظل صلاحية الإدارة لمالك البقالة.
 
-3. Start by adding products to your inventory. You can manually input product details or use the barcode scanning feature to quickly add products.
-
-4. Manage orders by creating new orders, updating existing ones, and processing completed orders.
-
-5. Generate invoices for completed orders, making your financial transaction smoother.
-
-6. Gain insights into your inventory and sales trends by exploring the analytics and reports sections.
-
-## Screenshots
-
-![Inventory Management](./screenshots/inventory_management.png)
-
-![Order Processing](./screenshots/order_processing.png)
-
-![Invoice Generation](./screenshots/invoice_generation.png)
-
-![Sales Insights](./screenshots/sales_insights.png)
-
-## Contributing
-
-We welcome contributions to improve Dot. To contribute, follow these steps:
-
-1. Fork the repository.
-2. Create a branch for your feature or bug fix.
-3. Make your changes and test them thoroughly.
-4. Create a pull request, explaining your changes.
-
-We will review your pull request as soon as possible. Thank you for helping make Dot even better!
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-Feel free to reach out if you have any questions or encounter any issues. Happy inventory management with Dot!
+لا ترفع ملفات التوقيع (`*.jks` / `*.keystore`) أو كلمات المرور أو نسخ قواعد البيانات الخاصة إلى GitHub.

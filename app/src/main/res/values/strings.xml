@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">بقالة الشعيبي</string>
+    <string name="app_name">الشعيبي لإدارة البقالة</string>
     <string name="logo">شعار بقالة الشعيبي</string>
 
     <string name="log_in_to_your_account">تسجيل الدخول إلى حسابك</string>
@@ -163,8 +163,8 @@
     <string name="forgot_password_message">أدخل بريدك الإلكتروني لاستعادة كلمة المرور.</string>
 
     <string name="close_button">إغلاق</string>
-    <string name="john_doe">مدير البقالة</string>
-    <string name="johndoe_gmail_com">admin@alshuibi.local</string>
+    <string name="john_doe">علي صالح الشعيبي</string>
+    <string name="johndoe_gmail_com">alisaleh10302040@gmail.com</string>
     <string name="address">العنوان</string>
     <string name="default_initial">ش</string>
     <string name="image_header">الصورة</string>
@@ -178,5 +178,20 @@
     <string name="terms_of_service_filler">
         باستخدام تطبيق بقالة الشعيبي فإنك توافق على استخدام النظام لإدارة المنتجات والمخزون والمبيعات بطريقة نظامية. يجب الحفاظ على بيانات الدخول وعدم مشاركتها مع أشخاص غير مخولين.
     </string>
+
+    <!-- V3 branding and ownership -->
+    <string name="owner_default_name">علي صالح الشعيبي</string>
+    <string name="owner_default_email">alisaleh10302040@gmail.com</string>
+    <string name="owner_role">مالك ومدير البقالة</string>
+    <string name="app_tagline">إدارة ذكية للمخزون والمبيعات</string>
+    <string name="developer_name">أبو جمال عبد الناصر مرشد الشوكي</string>
+    <string name="developer_role">المطور الرئيسي ومهندس النظام</string>
+    <string name="developer_phone">+967774827995</string>
+    <string name="developer_whatsapp">+967778657708</string>
+    <string name="developer_email">abujamalmurshed@gmail.com</string>
+    <string name="about_app">عن التطبيق وفريق التطوير</string>
+    <string name="contact_call">اتصال</string>
+    <string name="contact_whatsapp">واتساب</string>
+    <string name="contact_email">البريد</string>
 
 </resources>

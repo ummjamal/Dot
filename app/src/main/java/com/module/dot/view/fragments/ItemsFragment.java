@@ -19,11 +19,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.module.dot.R;
 import com.module.dot.data.local.GroceryDatabase;
 import com.module.dot.model.Item;
+import com.module.dot.utils.FileManager;
 import com.module.dot.view.adapters.ItemAdapter;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
         recyclerView = view.findViewById(R.id.itemList);
         emptyState = view.findViewById(R.id.noDataItemFragmentLL);
         SearchView search = view.findViewById(R.id.itemSearchView);
-        FloatingActionButton add = view.findViewById(R.id.addButton);
+        ExtendedFloatingActionButton add = view.findViewById(R.id.addButton);
 
         recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         adapter = new ItemAdapter(visibleItems, requireContext(), this);
@@ -67,7 +68,9 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
 
     private void load() {
         try (GroceryDatabase db = new GroceryDatabase(requireContext())) { db.readItem(allItems); }
-        visibleItems.clear(); visibleItems.addAll(allItems); refresh();
+        visibleItems.clear();
+        visibleItems.addAll(allItems);
+        refresh();
     }
 
     private void filter(String text) {
@@ -93,7 +96,7 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
     public void onItemLongClick(Item item) {
         new AlertDialog.Builder(requireContext())
                 .setTitle(item.getName())
-                .setItems(new String[]{"تعديل بيانات الصنف", "تعديل المخزون", "حذف الصنف"}, (d, which) -> {
+                .setItems(new String[]{"تعديل بيانات الصنف", "إضافة/سحب مخزون", "حذف الصنف"}, (d, which) -> {
                     if (which == 0) showEdit(item);
                     else if (which == 1) showStockAdjustment(item);
                     else showDelete(item);
@@ -125,15 +128,21 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
         int ci = categories.indexOf(item.getCategory()); if (ci >= 0) category.setSelection(ci);
         int ui = units.indexOf(item.getUnitType()); if (ui >= 0) unit.setSelection(ui);
 
-        new AlertDialog.Builder(requireContext()).setTitle("تعديل الصنف").setView(view)
+        new AlertDialog.Builder(requireContext()).setTitle("تعديل بيانات الصنف").setView(view)
                 .setNegativeButton("إلغاء", null)
                 .setPositiveButton("حفظ", (d, which) -> {
                     try {
-                        item.setName(String.valueOf(name.getText()).trim());
+                        String cleanName = String.valueOf(name.getText()).trim();
+                        double sale = Double.parseDouble(normalize(String.valueOf(salePrice.getText())));
+                        double purchase = String.valueOf(purchasePrice.getText()).trim().isEmpty() ? 0 : Double.parseDouble(normalize(String.valueOf(purchasePrice.getText())));
+                        int min = String.valueOf(minStock.getText()).trim().isEmpty() ? 5 : Integer.parseInt(normalize(String.valueOf(minStock.getText())));
+                        if (cleanName.isEmpty() || sale <= 0 || purchase < 0 || min < 0) throw new IllegalArgumentException("تحقق من الاسم والأسعار وحد التنبيه");
+
+                        item.setName(cleanName);
                         item.setSku(String.valueOf(barcode.getText()).trim());
-                        item.setPrice(Double.parseDouble(normalize(String.valueOf(salePrice.getText()))));
-                        item.setWholesalePrice(Double.parseDouble(normalize(String.valueOf(purchasePrice.getText()))));
-                        item.setMinStock(Integer.parseInt(normalize(String.valueOf(minStock.getText()))));
+                        item.setPrice(sale);
+                        item.setWholesalePrice(purchase);
+                        item.setMinStock(min);
                         item.setDescription(String.valueOf(description.getText()).trim());
                         item.setCategory(String.valueOf(category.getSelectedItem()));
                         item.setUnitType(String.valueOf(unit.getSelectedItem()));
@@ -150,10 +159,11 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
 
     private void showStockAdjustment(Item item) {
         EditText input = new EditText(requireContext());
-        input.setHint("الكمية");
+        input.setHint("أدخل الكمية");
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setPadding(32, 16, 32, 16);
         new AlertDialog.Builder(requireContext())
-                .setTitle("المخزون الحالي: " + item.getStock())
+                .setTitle("المخزون الحالي: " + item.getStock() + " " + item.getUnitType())
                 .setView(input)
                 .setNegativeButton("إلغاء", null)
                 .setNeutralButton("سحب", (d, w) -> adjust(item, input, false))
@@ -164,23 +174,29 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
     private void adjust(Item item, EditText input, boolean add) {
         try {
             int qty = Integer.parseInt(normalize(input.getText().toString()));
-            if (qty <= 0) return;
+            if (qty <= 0) throw new NumberFormatException();
             try (GroceryDatabase db = new GroceryDatabase(requireContext())) {
                 if (!db.adjustStock(item.getGlobalID(), add ? qty : -qty, add ? "توريد/إضافة مخزون" : "سحب/جرد")) {
-                    Toast.makeText(requireContext(), "الكمية غير صالحة", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "لا يمكن أن يصبح المخزون سالبًا", Toast.LENGTH_SHORT).show();
                     return;
                 }
             }
             load();
-        } catch (Exception e) { Toast.makeText(requireContext(), "أدخل كمية صحيحة", Toast.LENGTH_SHORT).show(); }
+            Toast.makeText(requireContext(), add ? "تمت إضافة المخزون" : "تم تسجيل السحب", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) { Toast.makeText(requireContext(), "أدخل كمية صحيحة أكبر من صفر", Toast.LENGTH_SHORT).show(); }
     }
 
     private void showDelete(Item item) {
         new AlertDialog.Builder(requireContext()).setTitle("حذف الصنف")
-                .setMessage("هل تريد حذف " + item.getName() + "؟ لا يمكن التراجع بعد الحذف.")
+                .setMessage("هل تريد حذف «" + item.getName() + "»؟ سيتم حذف الصنف من المخزون، بينما تبقى الفواتير القديمة محفوظة.")
                 .setNegativeButton("إلغاء", null)
                 .setPositiveButton("حذف", (d, w) -> {
-                    try (GroceryDatabase db = new GroceryDatabase(requireContext())) { db.deleteItem(item.getGlobalID()); }
+                    boolean deleted;
+                    try (GroceryDatabase db = new GroceryDatabase(requireContext())) { deleted = db.deleteItem(item.getGlobalID()); }
+                    if (deleted) {
+                        FileManager.deleteImageLocally(requireContext(), "Items", item.getImagePath());
+                        Toast.makeText(requireContext(), "تم حذف الصنف", Toast.LENGTH_SHORT).show();
+                    }
                     load();
                 }).show();
     }

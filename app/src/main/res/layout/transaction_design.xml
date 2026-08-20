@@ -1,142 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".view.fragments.TransactionsFragment">
+    android:layout_marginStart="6dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginEnd="6dp"
+    android:layout_marginBottom="6dp"
+    app:cardBackgroundColor="@color/brand_surface"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="1dp"
+    app:strokeColor="@color/brand_divider"
+    app:strokeWidth="1dp">
 
-    <androidx.cardview.widget.CardView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_gravity="center"
-        android:layout_margin="7dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center"
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/circle_background">
+            <ImageView
+                android:id="@+id/PaymentType"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/payment_type"
+                android:src="@drawable/baseline_money_24"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
             android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/transactionDate"
-                android:layout_width="wrap_content"
-                android:layout_height="10dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="11dp"
-                android:text="@string/date_sample"
-                android:textSize="8sp"
-                app:layout_constraintBottom_toTopOf="@+id/transactionOrderNumber"
-                app:layout_constraintEnd_toStartOf="@+id/transactionTime"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"
-                tools:ignore="SmallSp,TextSizeCheck" />
-
-            <TextView
-                android:id="@+id/transactionTime"
-                android:layout_width="wrap_content"
-                android:layout_height="10dp"
-                android:layout_marginStart="11dp"
-                android:layout_marginTop="5dp"
-                android:text="@string/time_sample"
-                android:textSize="8sp"
-                app:layout_constraintStart_toEndOf="@+id/transactionDate"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:ignore="SmallSp,TextSizeCheck" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="12dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="2dp"
-                android:text="@string/pound"
-                android:textColor="@color/black"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/transactionDate"
-                tools:ignore="TextSizeCheck" />
-
             <TextView
                 android:id="@+id/transactionOrderNumber"
                 android:layout_width="wrap_content"
-                android:layout_height="12dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="2dp"
-                android:text="@string/order_number"
-                android:textColor="@color/black"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/transactionDate"
-                tools:ignore="TextSizeCheck" />
-
+                android:layout_height="wrap_content"
+                android:text="فاتورة #1"
+                android:textColor="@color/brand_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
             <TextView
                 android:id="@+id/transactionID"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="middle"
+                android:maxLines="1"
+                android:text="S-123"
+                android:textColor="@color/brand_text_secondary"
+                android:textDirection="ltr"
+                android:textSize="10sp" />
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="11dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="1dp"
-                android:text="@string/transaction_id_sample"
-                android:textColor="@color/black"
-                android:textSize="9sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/transactionOrderNumber"
-                tools:ignore="SmallSp,TextSizeCheck" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/transactionDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2026-08-20"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="11sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="•" android:textColor="@color/brand_text_secondary" />
+                <TextView
+                    android:id="@+id/transactionTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="12:00"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textDirection="ltr"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/transactionTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 ر.ي"
+                android:textColor="@color/brand_primary_dark"
+                android:textSize="18sp"
+                android:textStyle="bold" />
             <TextView
                 android:id="@+id/transactionStatus"
                 android:layout_width="wrap_content"
-                android:layout_height="12dp"
-                android:layout_marginStart="15dp"
-                android:layout_marginBottom="6dp"
-                android:text="@string/pending"
-                android:textColor="#4CAF50"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/badge_success"
+                android:text="مكتملة"
+                android:textColor="@color/brand_success"
                 android:textSize="10sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/transactionID"
-                app:layout_constraintVertical_bias="0.0"
-                tools:ignore="SmallSp,TextContrastCheck,TextSizeCheck" />
-
-            <TextView
-                android:id="@+id/transactionTotal"
-                android:layout_width="60dp"
-                android:layout_height="17dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="16dp"
-                android:gravity="end"
-                android:text="@string/default_charge"
-                android:textColor="@color/black"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:ignore="TextSizeCheck" />
-
-            <ImageView
-                android:id="@+id/PaymentType"
-                android:layout_width="30dp"
-                android:layout_height="20dp"
-                android:layout_marginEnd="50dp"
-                android:layout_marginBottom="20dp"
-                android:contentDescription="@string/payment_type"
-                android:src="@drawable/baseline_money_24"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/transactionTotal"
-                tools:ignore="ImageContrastCheck" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.cardview.widget.CardView>
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

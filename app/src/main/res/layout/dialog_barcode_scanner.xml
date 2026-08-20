@@ -48,7 +48,7 @@
                 android:alpha="0.55"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="تشغيل أو إطفاء الفلاش"
-                android:src="@drawable/baseline_image_24"
+                android:src="@drawable/ic_flashlight_24"
                 app:tint="@color/white" />
         </LinearLayout>
 

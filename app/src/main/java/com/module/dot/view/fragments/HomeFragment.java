@@ -200,7 +200,7 @@ public class HomeFragment extends Fragment {
 
     private void updateCartButton() {
         if (chargeButton == null) return;
-        chargeButton.setText("السلة • " + cartCount() + " • " + LocalFormat.getCurrencyFormat(cartTotal()));
+        chargeButton.setText("السلة • " + cartCount() + " عنصر • " + LocalFormat.getCurrencyFormat(cartTotal()));
     }
 
     private void showCartDialog() {

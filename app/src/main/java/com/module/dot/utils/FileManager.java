@@ -50,6 +50,15 @@ public class FileManager {
         }
     }
 
+    public static void deleteImageLocally(Context context, String folder, String fileName) {
+        if (fileName == null || fileName.trim().isEmpty()) return;
+        File directory = context.getDir(folder, Context.MODE_PRIVATE);
+        File file = new File(directory, fileName + ".png");
+        if (file.exists() && !file.delete()) {
+            Log.w("FileManager", "Could not delete image: " + file.getAbsolutePath());
+        }
+    }
+
     public static void clearAppCache(Context context) {
         try {
             deleteFolder(context, "Items");

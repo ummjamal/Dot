@@ -27,7 +27,7 @@ import java.util.UUID;
 public class GroceryDatabase extends SQLiteOpenHelper {
     private static final String TAG = "GroceryDatabase";
     public static final String DATABASE_NAME = "BaqalatAlshuibi.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     protected final Context context;
 
     public GroceryDatabase(@Nullable Context context) {
@@ -120,7 +120,12 @@ public class GroceryDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Version 1 is a clean database name, so no destructive migration is needed yet.
+        if (oldVersion < 2) {
+            // V3 branding/ownership migration. Only replace untouched V2 placeholders.
+            db.execSQL("UPDATE app_settings SET setting_value='علي صالح الشعيبي' WHERE setting_key='owner_name' AND (setting_value='' OR setting_value='مدير البقالة')");
+            db.execSQL("UPDATE app_settings SET setting_value='alisaleh10302040@gmail.com' WHERE setting_key='owner_email' AND (setting_value='' OR setting_value='admin@alshuibi.local')");
+            db.execSQL("UPDATE users SET first_name='علي صالح', last_name='الشعيبي', email='alisaleh10302040@gmail.com' WHERE role='Administrator' AND email='admin@alshuibi.local'");
+        }
     }
 
     private void seedDefaults(SQLiteDatabase db) {
@@ -147,8 +152,8 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         }
 
         putSetting(db, "store_name", "بقالة الشعيبي");
-        putSetting(db, "owner_name", "مدير البقالة");
-        putSetting(db, "owner_email", "admin@alshuibi.local");
+        putSetting(db, "owner_name", "علي صالح الشعيبي");
+        putSetting(db, "owner_email", "alisaleh10302040@gmail.com");
         putSetting(db, "owner_phone", "");
         putSetting(db, "store_address", "الضالع - اليمن");
         putSetting(db, "low_stock_default", "5");
@@ -159,9 +164,9 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         if (empty) {
             ContentValues admin = new ContentValues();
             admin.put("global_id", "local-admin");
-            admin.put("first_name", "مدير");
-            admin.put("last_name", "البقالة");
-            admin.put("email", "admin@alshuibi.local");
+            admin.put("first_name", "علي صالح");
+            admin.put("last_name", "الشعيبي");
+            admin.put("email", "alisaleh10302040@gmail.com");
             admin.put("role", "Administrator");
             admin.put("password_hash", PasswordUtils.hashPassword("123456"));
             db.insertOrThrow("users", null, admin);
@@ -233,7 +238,7 @@ public class GroceryDatabase extends SQLiteOpenHelper {
     }
 
     public boolean updateAdmin(String fullName, String email, @Nullable String newPassword) {
-        String cleanName = fullName == null ? "مدير البقالة" : fullName.trim();
+        String cleanName = fullName == null ? "علي صالح الشعيبي" : fullName.trim();
         String first = cleanName;
         String last = "";
         int space = cleanName.indexOf(' ');
@@ -244,7 +249,7 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("first_name", first);
         cv.put("last_name", last);
-        cv.put("email", email == null || email.trim().isEmpty() ? "admin@alshuibi.local" : email.trim());
+        cv.put("email", email == null || email.trim().isEmpty() ? "alisaleh10302040@gmail.com" : email.trim());
         if (newPassword != null && !newPassword.trim().isEmpty()) {
             cv.put("password_hash", PasswordUtils.hashPassword(newPassword));
         }

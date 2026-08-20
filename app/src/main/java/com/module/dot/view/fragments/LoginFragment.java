@@ -32,7 +32,9 @@ public class LoginFragment extends Fragment {
         TextInputEditText email = view.findViewById(R.id.email);
         TextInputEditText password = view.findViewById(R.id.passwordText);
         Button login = view.findViewById(R.id.loginButton);
-        email.setText("admin@alshuibi.local");
+        try (GroceryDatabase db = new GroceryDatabase(requireContext())) {
+            email.setText(db.getSetting("owner_email", getString(R.string.owner_default_email)));
+        }
 
         login.setOnClickListener(v -> {
             String e = String.valueOf(email.getText()).trim();

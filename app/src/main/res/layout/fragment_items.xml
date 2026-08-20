@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/brand_background"
-    android:padding="12dp">
+    android:paddingStart="12dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="12dp">
 
     <TextView
         android:id="@+id/itemsTitle"
@@ -12,20 +14,32 @@
         android:layout_height="wrap_content"
         android:text="الأصناف والمخزون"
         android:textColor="@color/brand_text"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <TextView
+        android:id="@+id/itemsHint"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="اضغط مطولًا على أي صنف للتعديل أو الجرد أو الحذف"
+        android:textColor="@color/brand_text_secondary"
+        android:textSize="12sp"
+        app:layout_constraintTop_toBottomOf="@id/itemsTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.appcompat.widget.SearchView
         android:id="@+id/itemSearchView"
         android:layout_width="0dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@color/white"
+        android:layout_height="56dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/search_field_background"
         android:iconifiedByDefault="false"
         android:queryHint="ابحث بالاسم أو القسم أو الباركود"
-        app:layout_constraintTop_toBottomOf="@id/itemsTitle"
+        app:layout_constraintTop_toBottomOf="@id/itemsHint"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -52,20 +66,22 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-        <ImageView android:layout_width="90dp" android:layout_height="90dp" android:alpha="0.25" android:src="@drawable/ic_empty" android:contentDescription="@string/no_items"/>
+        <ImageView android:layout_width="90dp" android:layout_height="90dp" android:alpha="0.22" android:src="@drawable/ic_empty" android:contentDescription="@string/no_items"/>
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="لا توجد أصناف حتى الآن" android:textColor="@color/brand_text" android:textSize="18sp" android:textStyle="bold"/>
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="اضغط + لإضافة أول صنف" android:textColor="@color/brand_text_secondary"/>
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/addButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="18dp"
         android:contentDescription="@string/add_new_item"
-        android:src="@drawable/baseline_add_24"
+        android:text="إضافة صنف"
+        android:textColor="@color/white"
         app:backgroundTint="@color/brand_primary"
-        app:tint="@color/white"
+        app:icon="@drawable/baseline_add_24"
+        app:iconTint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,7 +5,6 @@ import static android.app.Activity.RESULT_OK;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,6 +67,8 @@ public class NewItemFragment extends Fragment {
         setupCategories();
         unit.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item,
                 Arrays.asList("حبة", "علبة", "كرتون", "باكت", "كيس", "كيلو", "جرام", "لتر", "نصف لتر", "درزن", "ربطة")));
+        purchasePrice.setText("0");
+        stock.setText("0");
         minStock.setText("5");
 
         getParentFragmentManager().setFragmentResultListener(BARCODE_KEY, getViewLifecycleOwner(), (key, bundle) ->
@@ -97,7 +98,10 @@ public class NewItemFragment extends Fragment {
         category.setAdapter(categoryAdapter);
         category.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                if (ADD_CATEGORY.equals(categories.get(position))) { category.setSelection(0); showAddCategory(); }
+                if (position >= 0 && position < categories.size() && ADD_CATEGORY.equals(categories.get(position))) {
+                    category.setSelection(0);
+                    showAddCategory();
+                }
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
         });
@@ -113,44 +117,71 @@ public class NewItemFragment extends Fragment {
     private void showAddCategory() {
         EditText input = new EditText(requireContext());
         input.setHint("اسم القسم الجديد");
-        new AlertDialog.Builder(requireContext()).setTitle("إضافة قسم").setView(input)
+        input.setSingleLine(true);
+        new AlertDialog.Builder(requireContext()).setTitle("إضافة قسم جديد").setView(input)
                 .setNegativeButton("إلغاء", null)
                 .setPositiveButton("إضافة", (d, w) -> {
                     String value = input.getText().toString().trim();
                     if (value.isEmpty()) return;
                     try (GroceryDatabase db = new GroceryDatabase(requireContext())) {
-                        if (!db.addCategory(value)) Toast.makeText(requireContext(), "القسم موجود مسبقًا", Toast.LENGTH_SHORT).show();
+                        if (!db.addCategory(value)) {
+                            Toast.makeText(requireContext(), "القسم موجود مسبقًا", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
                     }
                     reloadCategories();
-                    int i = categories.indexOf(value); if (i >= 0) category.setSelection(i);
+                    int i = categories.indexOf(value);
+                    if (i >= 0) category.setSelection(i);
                 }).show();
     }
 
     private void saveItem() {
         try {
             String itemName = String.valueOf(name.getText()).trim();
-            if (itemName.isEmpty()) { name.setError("اسم الصنف مطلوب"); return; }
-            double sale = Double.parseDouble(normalize(String.valueOf(salePrice.getText())));
-            double purchase = String.valueOf(purchasePrice.getText()).trim().isEmpty() ? 0 : Double.parseDouble(normalize(String.valueOf(purchasePrice.getText())));
-            int qty = Integer.parseInt(normalize(String.valueOf(stock.getText())));
-            int min = String.valueOf(minStock.getText()).trim().isEmpty() ? 5 : Integer.parseInt(normalize(String.valueOf(minStock.getText())));
-            Item item = new Item(itemName, sale, String.valueOf(category.getSelectedItem()), String.valueOf(barcode.getText()).trim(),
+            String saleText = normalize(String.valueOf(salePrice.getText()));
+            String purchaseText = normalize(String.valueOf(purchasePrice.getText()));
+            String stockText = normalize(String.valueOf(stock.getText()));
+            String minText = normalize(String.valueOf(minStock.getText()));
+
+            if (itemName.isEmpty()) { name.setError("اسم الصنف مطلوب"); name.requestFocus(); return; }
+            if (saleText.isEmpty()) { salePrice.setError("سعر البيع مطلوب"); salePrice.requestFocus(); return; }
+
+            double sale = Double.parseDouble(saleText);
+            double purchase = purchaseText.isEmpty() ? 0 : Double.parseDouble(purchaseText);
+            int qty = stockText.isEmpty() ? 0 : Integer.parseInt(stockText);
+            int min = minText.isEmpty() ? 5 : Integer.parseInt(minText);
+
+            if (sale <= 0) { salePrice.setError("سعر البيع يجب أن يكون أكبر من صفر"); return; }
+            if (purchase < 0 || qty < 0 || min < 0) {
+                Toast.makeText(requireContext(), "السعر والكمية وحد التنبيه لا يمكن أن تكون سالبة", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            String selectedCategory = String.valueOf(category.getSelectedItem());
+            if (ADD_CATEGORY.equals(selectedCategory)) selectedCategory = "أخرى";
+            String id = UUID.randomUUID().toString();
+            Item item = new Item(itemName, sale, selectedCategory, String.valueOf(barcode.getText()).trim(),
                     String.valueOf(unit.getSelectedItem()), qty, purchase, 0, String.valueOf(description.getText()).trim(), min);
-            item.setGlobalID(UUID.randomUUID().toString());
+            item.setGlobalID(id);
             item.setCreatorID("local-admin");
 
-            if (imageSelected) {
-                Drawable drawable = image.getDrawable();
-                if (drawable != null) {
-                    item.setImagePath(item.getGlobalID());
-                    FileManager.saveImageLocally(requireContext(), drawable, "Items", item.getGlobalID());
+            try (GroceryDatabase db = new GroceryDatabase(requireContext())) {
+                // First commit validated business data. This prevents orphaned images when a barcode is duplicated.
+                db.createItem(item);
+                if (imageSelected) {
+                    Drawable drawable = image.getDrawable();
+                    if (drawable != null) {
+                        FileManager.saveImageLocally(requireContext(), drawable, "Items", id);
+                        item.setImagePath(id);
+                        db.updateItem(item);
+                    }
                 }
             }
-            try (GroceryDatabase db = new GroceryDatabase(requireContext())) { db.createItem(item); }
-            Toast.makeText(requireContext(), "تمت إضافة الصنف", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(requireContext(), "تمت إضافة الصنف بنجاح", Toast.LENGTH_SHORT).show();
             getParentFragmentManager().beginTransaction().replace(R.id.fragment_container, new ItemsFragment()).commit();
         } catch (NumberFormatException e) {
-            Toast.makeText(requireContext(), "تحقق من السعر والكمية", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "تحقق من السعر والكمية وحد التنبيه", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(requireContext(), "تعذر إضافة الصنف: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
