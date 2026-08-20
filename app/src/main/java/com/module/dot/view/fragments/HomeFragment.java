@@ -1,9 +1,5 @@
 package com.module.dot.view.fragments;
 
-/*
- Created by Wiscarlens Lucius on 1 February 2023.
- */
-
 import static com.module.dot.utils.LocalFormat.getCurrentDateTime;
 
 import android.app.AlertDialog;
@@ -38,355 +34,901 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanOptions;
-import com.module.dot.view.adapters.OrderItemAdapter;
+import com.module.dot.R;
+import com.module.dot.data.local.ItemDatabase;
+import com.module.dot.data.remote.FirebaseHandler;
 import com.module.dot.model.Item;
-import com.module.dot.view.adapters.ItemAdapter;
-import com.module.dot.view.MainActivity;
 import com.module.dot.model.Order;
 import com.module.dot.model.Transaction;
-import com.module.dot.data.remote.FirebaseHandler;
-import com.module.dot.data.local.ItemDatabase;
 import com.module.dot.utils.LocalFormat;
-import com.module.dot.view.utils.ScannerManager;
-import com.module.dot.R;
+import com.module.dot.view.MainActivity;
+import com.module.dot.view.adapters.ItemAdapter;
+import com.module.dot.view.adapters.OrderItemAdapter;
 
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HomeFragment extends Fragment {
+
+    private static final String TAG = "HomeFragment";
+
     private FragmentActivity fragmentActivity;
     private Button chargeButton;
 
     private final ArrayList<Item> itemList = new ArrayList<>();
+    private final ArrayList<Item> selectedItems = new ArrayList<>();
 
-    // TODO: Make selectedItem a set instead of an arraylist
-    private final ArrayList<Item> selectedItems =  new ArrayList<>();
+    private final AtomicReference<Double> totalTax =
+            new AtomicReference<>(0.00);
 
-    // Select item total
-    private final AtomicReference<Double> totalTax = new AtomicReference<>(0.00);
-    private final AtomicReference<Double> totalPrice = new AtomicReference<>(0.00);
-    private String currentTax;
-    private String currentCharge;
+    private final AtomicReference<Double> totalPrice =
+            new AtomicReference<>(0.00);
+
+    private String currentTax = "0 ر.ي";
+    private String currentCharge = "0 ر.ي";
+
     public Long totalItem = 0L;
 
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        fragmentActivity = (FragmentActivity) context;
-    }
+    /*
+     * ماسح الباركود الجديد.
+     *
+     * هذه هي الطريقة الوحيدة التي سنستخدمها للمسح.
+     * لا يوجد ScannerManager هنا؛ لأن النتيجة يجب أن تصل
+     * من ActivityResult callback بعد انتهاء الكاميرا.
+     */
+    private final ActivityResultLauncher<ScanOptions> barcodeLauncher =
+            registerForActivityResult(
+                    new ScanContract(),
+                    result -> {
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        MainActivity mainActivity = (MainActivity) getActivity();
-        assert mainActivity != null;
-        mainActivity.enableNavigationViews(View.VISIBLE);
-
-        LinearLayout noData = view.findViewById(R.id.noDataHomeFragmentLL); // When Database is empty
-        RecyclerView recyclerView = view.findViewById(R.id.itemList);
-        FloatingActionButton scanButton = view.findViewById(R.id.scanButton);
-        chargeButton = view.findViewById(R.id.Charge);
-
-        ScannerManager scannerManager = new ScannerManager(this);
-
-        try (ItemDatabase itemDatabase = new ItemDatabase(getContext())) {
-            if (itemDatabase.isTableEmpty("items")) {
-                itemDatabase.showEmptyStateMessage(recyclerView, noData);
-            } else {
-                itemDatabase.showStateMessage(recyclerView, noData);
-                itemDatabase.readItem(itemList); // Read data from database and save it the arraylist
-            }
-        } catch (Exception e) {
-            Log.i("UserFragment", Objects.requireNonNull(e.getMessage()));
-        }
-
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
-        recyclerView.setAdapter(new ItemAdapter(itemList, getContext(), this));
-
-        updateTax(0.0);
-        updateAmount(0.00);
-
-//        // When user select an item
-//        itemGridview.setOnItemClickListener((parent, view1, position, id) -> {
-//            // Find the selected item
-//            Item selectedItem = new Item(
-//                    itemList.get(position).getGlobalID(),
-//                    itemList.get(position).getName(),
-//                    itemList.get(position).getPrice(),
-//                    itemList.get(position).getTax(),
-//                    itemList.get(position).getSku(),
-//                    1L
-//            );
-//
-//            // TODO: Optimize - All the line below can be part of addToSElected Item method
-//            double itemSelectedPrice = itemList.get(position).getPrice();
-//            double tax = (itemList.get(position).getTax() / 100) * itemSelectedPrice;
-//
-//            totalItem ++;
-//
-//            addToSelectedItems(selectedItem);
-//            updateTax(tax);
-//            updateAmount(itemSelectedPrice);
-//
-//        });
-
-        // When user click on charge button
-        chargeButton.setOnClickListener(v -> {
-            // Open bottom sheet layout
-            Dialog dialog = showButtonDialog();
-
-            final double bottomSheetHeight = 0.58; // Initialize to 56% of the screen height
-
-            setBottomSheetHeight(dialog, bottomSheetHeight);
-        });
-
-        // When user click on scanner button
-        scanButton.setOnClickListener(v -> {
-                if (itemList.isEmpty()) {
-                    Toast.makeText(fragmentActivity, getResources().getString(R.string.empty_database), Toast.LENGTH_SHORT).show();
-                } else {
-                    scannerManager.startBarcodeScanning(); // Scan barcode
-                    String barcode = scannerManager.getScanItem(); // get barcode
-
-                    for (Item item : itemList) {
-                        if (barcode.equals(item.getSku())) {
-                            addToSelectedItems(item); // Add the item to the selectedItems list
-                            updateAmount(item.getPrice()); // Update Selected Item amount
-
-                            break;
-                        } else {
-                            Toast.makeText(fragmentActivity, "Item not found", Toast.LENGTH_SHORT).show();
+                        if (!isAdded()) {
+                            return;
                         }
+
+                        /*
+                         * المستخدم ضغط رجوع أو أغلق الماسح
+                         * بدون قراءة باركود.
+                         */
+                        if (
+                                result == null ||
+                                result.getContents() == null ||
+                                result.getContents().trim().isEmpty()
+                        ) {
+
+                            Toast.makeText(
+                                    requireContext(),
+                                    "تم إلغاء مسح الباركود",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            return;
+                        }
+
+                        String barcode =
+                                result.getContents().trim();
+
+                        addScannedBarcodeToCart(barcode);
                     }
+            );
 
+    @Override
+    public void onAttach(@NonNull Context context) {
 
+        super.onAttach(context);
 
+        fragmentActivity =
+                (FragmentActivity) context;
+    }
 
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater,
+            ViewGroup container,
+            Bundle savedInstanceState
+    ) {
 
-                    // Find the barcode in the database
-//                    scanCode();  // Scan barcode to add item to cart
-                }
-            }
+        return inflater.inflate(
+                R.layout.fragment_home,
+                container,
+                false
         );
     }
 
-    public Dialog showButtonDialog(){
-        final Dialog bottomSheetDialog = new Dialog(requireContext());
+    @Override
+    public void onViewCreated(
+            @NonNull View view,
+            @Nullable Bundle savedInstanceState
+    ) {
 
-        bottomSheetDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        bottomSheetDialog.setContentView(R.layout.bottomsheet_layout);
+        super.onViewCreated(
+                view,
+                savedInstanceState
+        );
 
-        TextView taxTotal = bottomSheetDialog.findViewById(R.id.taxTotal);
-        TextView transactionTotal = bottomSheetDialog.findViewById(R.id.transactionTotal);
-        Button checkoutButton = bottomSheetDialog.findViewById(R.id.checkoutButton);
-        RecyclerView bottomSheetRecyclerView = bottomSheetDialog.findViewById(R.id.transactionSheetList); // Find the RecyclerView in the layout
+        MainActivity mainActivity =
+                (MainActivity) getActivity();
 
-        taxTotal.setText(String.valueOf(currentTax));
-        transactionTotal.setText(currentCharge);
+        if (mainActivity != null) {
+            mainActivity.enableNavigationViews(
+                    View.VISIBLE
+            );
+        }
 
-        // Bottom sheet recycle view
-        bottomSheetRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        LinearLayout noData =
+                view.findViewById(
+                        R.id.noDataHomeFragmentLL
+                );
 
-        // Create the adapter and set it to the RecyclerView
-        OrderItemAdapter orderItemAdapter = new OrderItemAdapter(selectedItems, getContext());
-        bottomSheetRecyclerView.setAdapter(orderItemAdapter);
+        RecyclerView recyclerView =
+                view.findViewById(
+                        R.id.itemList
+                );
 
-        checkoutButton.setOnClickListener(v -> {
-            bottomSheetDialog.dismiss();
+        FloatingActionButton scanButton =
+                view.findViewById(
+                        R.id.scanButton
+                );
 
-            // Check if recycle view is empty before check out
-            if (!selectedItems.isEmpty()) {
-                // Sending total price to confirmationFragment
-                Bundle result = new Bundle();
-                result.putString("price", currentCharge);
-                getParentFragmentManager().setFragmentResult("priceData", result);
+        chargeButton =
+                view.findViewById(
+                        R.id.Charge
+                );
 
-                // Confirmation message to check out
-                AlertDialog.Builder checkoutConfirmation = new AlertDialog.Builder(getContext());
+        /*
+         * مهم عند إعادة إنشاء View:
+         * لا نريد تكرار الأصناف في ArrayList.
+         */
+        itemList.clear();
 
-                checkoutConfirmation.setTitle(getResources().getString(R.string.confirm))
-                        .setMessage(getResources().getString(R.string.confirm_checkout))
-                        .setNegativeButton(getResources().getString(R.string.no), (dialog, which) -> {
-                             // Complete with the value 'false'
-                        }).setPositiveButton(getResources().getString(R.string.yes), (dialog, which) -> {
-                           // If user click on yes
-                            // Create New Order
+        try (
+                ItemDatabase itemDatabase =
+                        new ItemDatabase(
+                                requireContext()
+                        )
+        ) {
 
-                            String[] dateTime = getCurrentDateTime(); // Get the current date and time
+            if (
+                    itemDatabase.isTableEmpty(
+                            "items"
+                    )
+            ) {
 
-                           String orderGlobalID = FirebaseHandler.createOrder(new Order(
-                                   MainActivity.currentUser.getCreatorID(),   // Creator ID
-                                   dateTime[0],
-                                   dateTime[1],
-                                   totalPrice.get(), // Total amount
-                                   totalItem, // Total item
-                                   "Completed", // TODO: replace with the actual Order status
-                                   selectedItems
-                           ));
-
-                            FirebaseHandler.readOrder("orders", getContext());
-
-                            dateTime = getCurrentDateTime(); // Get the current date and time
-
-                            // TODO: Create a new transaction
-
-                            // Save data to firebase
-                            FirebaseHandler.createTransaction( new Transaction(
-                                    orderGlobalID, // Order ID
-                                    "APPROVE", // TODO: replace with the actual transaction status
-                                    totalPrice.get(),
-                                    "visa", // TODO: replace with the actual payment method
-                                    MainActivity.currentUser.getCreatorID(),
-                                    dateTime[0],
-                                    dateTime[1]
-                            ));
-
-                            FirebaseHandler.readTransaction("transactions", getContext());
-
-                            // Sending order number to receipt fragment
-                            Bundle orderNumberBundle = new Bundle();
-                            orderNumberBundle.putString("orderNumber", orderGlobalID);
-                            getParentFragmentManager().setFragmentResult("orderNumberData", orderNumberBundle);
-
-                            // Open Confirmation fragment
-                            FragmentManager fragmentManager = fragmentActivity.getSupportFragmentManager();
-                            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                            ConfirmationFragment confirmationFragment = new ConfirmationFragment();
-                            fragmentTransaction.replace(R.id.fragment_container, confirmationFragment);
-                            fragmentTransaction.commit();
-
-                        }).show();
+                itemDatabase.showEmptyStateMessage(
+                        recyclerView,
+                        noData
+                );
 
             } else {
-                String message = getResources().getString(R.string.empty_cart);
-                Toast.makeText(fragmentActivity, message, Toast.LENGTH_SHORT).show();
+
+                itemDatabase.showStateMessage(
+                        recyclerView,
+                        noData
+                );
+
+                itemDatabase.readItem(
+                        itemList
+                );
             }
 
+        } catch (Exception e) {
+
+            Log.e(
+                    TAG,
+                    "تعذر تحميل الأصناف",
+                    e
+            );
+        }
+
+        recyclerView.setLayoutManager(
+                new GridLayoutManager(
+                        requireContext(),
+                        3
+                )
+        );
+
+        recyclerView.setAdapter(
+                new ItemAdapter(
+                        itemList,
+                        requireContext(),
+                        this
+                )
+        );
+
+        resetTotals();
+
+        /*
+         * زر الإجمالي / سلة البيع.
+         */
+        chargeButton.setOnClickListener(v -> {
+
+            Dialog dialog =
+                    showButtonDialog();
+
+            setBottomSheetHeight(
+                    dialog,
+                    0.58
+            );
+        });
+
+        /*
+         * زر مسح الباركود.
+         *
+         * لا نحاول قراءة النتيجة هنا.
+         * فقط نفتح الكاميرا.
+         *
+         * النتيجة ستصل إلى barcodeLauncher أعلاه.
+         */
+        scanButton.setOnClickListener(v -> {
+
+            if (itemList.isEmpty()) {
+
+                Toast.makeText(
+                        requireContext(),
+                        getString(
+                                R.string.empty_database
+                        ),
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            ScanOptions options =
+                    new ScanOptions();
+
+            /*
+             * باركود المنتجات المعتاد:
+             * EAN / UPC / Code 128 وغيرها.
+             */
+            options.setDesiredBarcodeFormats(
+                    ScanOptions.ONE_D_CODE_TYPES
+            );
+
+            options.setPrompt(
+                    "وجّه الكاميرا إلى باركود الصنف"
+            );
+
+            options.setBeepEnabled(true);
+
+            /*
+             * يسمح للماسح باستخدام اتجاه الجهاز المناسب.
+             */
+            options.setOrientationLocked(false);
+
+            barcodeLauncher.launch(
+                    options
+            );
+        });
+    }
+
+    /**
+     * إضافة المنتج الذي تم العثور عليه بالباركود إلى سلة البيع.
+     */
+    private void addScannedBarcodeToCart(
+            String barcode
+    ) {
+
+        Item foundItem;
+
+        /*
+         * نبحث مباشرة في SQLite.
+         *
+         * أفضل من الاعتماد على ArrayList فقط،
+         * لأن قاعدة البيانات هي مصدر البيانات المحلي لدينا.
+         */
+        try (
+                ItemDatabase database =
+                        new ItemDatabase(
+                                requireContext()
+                        )
+        ) {
+
+            foundItem =
+                    database.getItemBySku(
+                            barcode
+                    );
+
+        } catch (Exception e) {
+
+            Log.e(
+                    TAG,
+                    "خطأ أثناء البحث عن الباركود",
+                    e
+            );
+
+            Toast.makeText(
+                    requireContext(),
+                    "تعذر البحث عن الصنف",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        /*
+         * الباركود غير موجود.
+         */
+        if (foundItem == null) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "الباركود غير مسجل في الأصناف",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        /*
+         * المنتج موجود لكن مخزونه صفر.
+         */
+        if (foundItem.getStock() <= 0) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "الصنف نافد من المخزون",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        /*
+         * نحسب كم وحدة من نفس المنتج موجودة بالفعل
+         * في سلة البيع.
+         */
+        long quantityInCart =
+                getQuantityInCart(
+                        foundItem.getGlobalID()
+                );
+
+        /*
+         * لا نسمح للسلة بتجاوز كمية المخزون.
+         */
+        if (
+                quantityInCart >=
+                        foundItem.getStock()
+        ) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "وصلت إلى آخر كمية متوفرة من هذا الصنف",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        /*
+         * ننشئ نسخة خاصة بالسلة حتى لا نعدل
+         * الكائن الأصلي الخاص بالمخزون.
+         */
+        Item selectedItem =
+                new Item(
+                        foundItem.getGlobalID(),
+                        foundItem.getName(),
+                        foundItem.getPrice(),
+                        foundItem.getTax(),
+                        foundItem.getSku(),
+                        1L
+                );
+
+        double tax =
+                (foundItem.getTax() / 100.0)
+                        *
+                        foundItem.getPrice();
+
+        totalItem++;
+
+        addToSelectedItems(
+                selectedItem
+        );
+
+        updateTax(
+                tax
+        );
+
+        updateAmount(
+                foundItem.getPrice()
+        );
+
+        Toast.makeText(
+                requireContext(),
+                "تمت إضافة " +
+                        foundItem.getName() +
+                        " إلى سلة البيع",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    /**
+     * معرفة عدد الوحدات الموجودة حاليًا من منتج معين في السلة.
+     */
+    private long getQuantityInCart(
+            String globalId
+    ) {
+
+        for (Item item : selectedItems) {
+
+            if (
+                    Objects.equals(
+                            globalId,
+                            item.getGlobalID()
+                    )
+            ) {
+
+                return item.getQuantity();
+            }
+        }
+
+        return 0L;
+    }
+
+    /**
+     * سلة البيع السفلية.
+     */
+    public Dialog showButtonDialog() {
+
+        final Dialog bottomSheetDialog =
+                new Dialog(
+                        requireContext()
+                );
+
+        bottomSheetDialog.requestWindowFeature(
+                Window.FEATURE_NO_TITLE
+        );
+
+        bottomSheetDialog.setContentView(
+                R.layout.bottomsheet_layout
+        );
+
+        TextView taxTotal =
+                bottomSheetDialog.findViewById(
+                        R.id.taxTotal
+                );
+
+        TextView transactionTotal =
+                bottomSheetDialog.findViewById(
+                        R.id.transactionTotal
+                );
+
+        Button checkoutButton =
+                bottomSheetDialog.findViewById(
+                        R.id.checkoutButton
+                );
+
+        RecyclerView bottomSheetRecyclerView =
+                bottomSheetDialog.findViewById(
+                        R.id.transactionSheetList
+                );
+
+        taxTotal.setText(
+                currentTax
+        );
+
+        transactionTotal.setText(
+                currentCharge
+        );
+
+        bottomSheetRecyclerView.setLayoutManager(
+                new LinearLayoutManager(
+                        requireContext()
+                )
+        );
+
+        OrderItemAdapter orderItemAdapter =
+                new OrderItemAdapter(
+                        selectedItems,
+                        requireContext()
+                );
+
+        bottomSheetRecyclerView.setAdapter(
+                orderItemAdapter
+        );
+
+        checkoutButton.setOnClickListener(v -> {
+
+            if (selectedItems.isEmpty()) {
+
+                Toast.makeText(
+                        requireContext(),
+                        getString(
+                                R.string.empty_cart
+                        ),
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            bottomSheetDialog.dismiss();
+
+            Bundle result =
+                    new Bundle();
+
+            result.putString(
+                    "price",
+                    currentCharge
+            );
+
+            getParentFragmentManager()
+                    .setFragmentResult(
+                            "priceData",
+                            result
+                    );
+
+            AlertDialog.Builder checkoutConfirmation =
+                    new AlertDialog.Builder(
+                            requireContext()
+                    );
+
+            checkoutConfirmation
+                    .setTitle(
+                            getString(
+                                    R.string.confirm
+                            )
+                    )
+                    .setMessage(
+                            getString(
+                                    R.string.confirm_checkout
+                            )
+                    )
+                    .setNegativeButton(
+                            getString(
+                                    R.string.no
+                            ),
+                            (dialog, which) ->
+                                    dialog.dismiss()
+                    )
+                    .setPositiveButton(
+                            getString(
+                                    R.string.yes
+                            ),
+                            (dialog, which) ->
+                                    performLegacyCheckout()
+                    )
+                    .show();
         });
 
         bottomSheetDialog.show();
 
-        Objects.requireNonNull(bottomSheetDialog.getWindow()).setLayout(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-        bottomSheetDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        bottomSheetDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-        bottomSheetDialog.getWindow().setGravity(Gravity.BOTTOM);
+        Window window =
+                bottomSheetDialog.getWindow();
+
+        if (window != null) {
+
+            window.setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+
+            window.setBackgroundDrawable(
+                    new ColorDrawable(
+                            Color.TRANSPARENT
+                    )
+            );
+
+            window.getAttributes().windowAnimations =
+                    R.style.DialogAnimation;
+
+            window.setGravity(
+                    Gravity.BOTTOM
+            );
+        }
 
         return bottomSheetDialog;
     }
 
     /**
-     * Sets the height of a dialog displayed as a bottom sheet to a specified percentage of the screen height.
+     * نظام الدفع القديم ما زال يعتمد على Firebase.
      *
-     * @param dialog The dialog for which to set the height.
-     * @param heightPercentage The desired height of the dialog as a percentage of the screen height.
+     * أبقيناه مؤقتًا حتى لا نكسر الفواتير الحالية.
+     *
+     * في المرحلة التالية سنستبدله بالكامل ببيع Offline
+     * داخل SQLite مع خصم المخزون في Transaction واحدة.
      */
-    private void setBottomSheetHeight(Dialog dialog, double heightPercentage){
-        // Set the height of the dialog
-        Window window = dialog.getWindow();
+    private void performLegacyCheckout() {
 
-        if (window != null) {
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, (int) (heightPercentage * getScreenHeight()));
-            window.setGravity(Gravity.BOTTOM);
+        if (MainActivity.currentUser == null) {
+
+            Toast.makeText(
+                    requireContext(),
+                    "بيانات المستخدم غير جاهزة",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        try {
+
+            String creatorId =
+                    MainActivity.currentUser
+                            .getCreatorID();
+
+            if (
+                    creatorId == null ||
+                    creatorId.trim().isEmpty()
+            ) {
+
+                creatorId =
+                        MainActivity.currentUser
+                                .getGlobalID();
+            }
+
+            if (
+                    creatorId == null ||
+                    creatorId.trim().isEmpty()
+            ) {
+
+                Toast.makeText(
+                        requireContext(),
+                        "تعذر تحديد المستخدم",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            String[] dateTime =
+                    getCurrentDateTime();
+
+            String orderGlobalID =
+                    FirebaseHandler.createOrder(
+                            new Order(
+                                    creatorId,
+                                    dateTime[0],
+                                    dateTime[1],
+                                    totalPrice.get(),
+                                    totalItem,
+                                    "Completed",
+                                    selectedItems
+                            )
+                    );
+
+            if (
+                    orderGlobalID == null ||
+                    orderGlobalID.trim().isEmpty()
+            ) {
+
+                Toast.makeText(
+                        requireContext(),
+                        "تعذر إنشاء الفاتورة",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            FirebaseHandler.readOrder(
+                    "orders",
+                    requireContext()
+            );
+
+            dateTime =
+                    getCurrentDateTime();
+
+            FirebaseHandler.createTransaction(
+                    new Transaction(
+                            orderGlobalID,
+                            "APPROVE",
+                            totalPrice.get(),
+                            "cash",
+                            creatorId,
+                            dateTime[0],
+                            dateTime[1]
+                    )
+            );
+
+            FirebaseHandler.readTransaction(
+                    "transactions",
+                    requireContext()
+            );
+
+            Bundle orderNumberBundle =
+                    new Bundle();
+
+            orderNumberBundle.putString(
+                    "orderNumber",
+                    orderGlobalID
+            );
+
+            getParentFragmentManager()
+                    .setFragmentResult(
+                            "orderNumberData",
+                            orderNumberBundle
+                    );
+
+            FragmentManager fragmentManager =
+                    fragmentActivity
+                            .getSupportFragmentManager();
+
+            FragmentTransaction fragmentTransaction =
+                    fragmentManager
+                            .beginTransaction();
+
+            fragmentTransaction.replace(
+                    R.id.fragment_container,
+                    new ConfirmationFragment()
+            );
+
+            fragmentTransaction.commit();
+
+        } catch (Exception e) {
+
+            Log.e(
+                    TAG,
+                    "Checkout failed",
+                    e
+            );
+
+            Toast.makeText(
+                    requireContext(),
+                    "حدث خطأ أثناء إتمام البيع",
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 
     /**
-     * Retrieves the height of the device screen in pixels.
-     *
-     * @return The height of the screen in pixels.
+     * تحديد ارتفاع نافذة السلة.
+     */
+    private void setBottomSheetHeight(
+            Dialog dialog,
+            double heightPercentage
+    ) {
+
+        Window window =
+                dialog.getWindow();
+
+        if (window != null) {
+
+            window.setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    (int) (
+                            heightPercentage
+                                    *
+                                    getScreenHeight()
+                    )
+            );
+
+            window.setGravity(
+                    Gravity.BOTTOM
+            );
+        }
+    }
+
+    /**
+     * ارتفاع شاشة الهاتف.
      */
     private int getScreenHeight() {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        requireActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        DisplayMetrics displayMetrics =
+                new DisplayMetrics();
+
+        requireActivity()
+                .getWindowManager()
+                .getDefaultDisplay()
+                .getMetrics(
+                        displayMetrics
+                );
+
         return displayMetrics.heightPixels;
     }
 
-
     /**
-     * Result launcher for initiating barcode scanning and handling the scanning result.
-     */
-    ActivityResultLauncher<ScanOptions>  scannerLauncher = registerForActivityResult(new ScanContract(), result -> {
-        String scanItem = result.getContents();
-
-        for (Item item : itemList) {
-             if (scanItem.equals(item.getSku())) {
-                 addToSelectedItems(item); // Add the item to the selectedItems list
-                 updateAmount(item.getPrice()); // Update Selected Item amount
-
-                 break;
-             } else {
-                 Toast.makeText(fragmentActivity, "Item not found", Toast.LENGTH_SHORT).show();
-             }
-        }
-    });
-
-//    private boolean addScannedItem(String scanItem){
-//        for (Item item : item_for_display) {
-//            if (scanItem.equals(item.getSku())) {
-////                return true;
-//                addToSelectedItems(item); // Add the item to the selectedItems list
-//                updateAmount(item.getPrice()); // Update Selected Item amount
-//
-////                break;
-//            } else {
-//                Toast.makeText(fragmentActivity, "Item not found", Toast.LENGTH_SHORT).show();
-////                return false;
-//            }
-//        }
-//
-//        return false;
-//    }
-
-    /**
-     * Adds an item to the selectedItems list or increases its frequency if it already exists.
+     * إضافة صنف للسلة.
      *
-     * @param newItem The item to be added or whose frequency should be increased.
+     * إذا كان موجودًا مسبقًا نزيد الكمية.
      */
-    public void addToSelectedItems(Item newItem) {
-        // Check if the item is already in selectedItems
-        for (Item item : selectedItems) {
-            if (Objects.equals(item.getGlobalID(), newItem.getGlobalID())) {
-                // Item already exists, increase frequency
-                item.setQuantity(item.getQuantity() + 1);
+    public void addToSelectedItems(
+            Item newItem
+    ) {
 
-                return; // Exit the method since the item was found
+        if (newItem == null) {
+            return;
+        }
+
+        for (Item item : selectedItems) {
+
+            if (
+                    Objects.equals(
+                            item.getGlobalID(),
+                            newItem.getGlobalID()
+                    )
+            ) {
+
+                item.setQuantity(
+                        item.getQuantity() + 1
+                );
+
+                return;
             }
         }
 
-        // Item not found, add it to selectedItems
-        selectedItems.add(newItem);
+        selectedItems.add(
+                newItem
+        );
     }
 
-    public void updateAmount(double amount) {
-        // Add selected item price together
-        totalPrice.set(totalPrice.get() + amount); // Add the item price to the total price
+    /**
+     * تحديث المبلغ الإجمالي.
+     */
+    public void updateAmount(
+            double amount
+    ) {
 
-        // Format the double value into currency format
-        currentCharge = LocalFormat.getCurrencyFormat(totalPrice.get());
+        totalPrice.set(
+                Math.max(
+                        0.0,
+                        totalPrice.get() + amount
+                )
+        );
 
-        // Set the button text to the current value of price
-        chargeButton.setText(currentCharge);
+        currentCharge =
+                LocalFormat.getCurrencyFormat(
+                        totalPrice.get()
+                );
+
+        if (chargeButton != null) {
+
+            chargeButton.setText(
+                    currentCharge
+            );
+        }
     }
 
-    public void updateTax(double amount) {
-        totalTax.set(totalTax.get() + amount);
+    /**
+     * تحديث الضريبة.
+     */
+    public void updateTax(
+            double amount
+    ) {
 
-        currentTax = LocalFormat.getCurrencyFormat(totalTax.get());
+        totalTax.set(
+                Math.max(
+                        0.0,
+                        totalTax.get() + amount
+                )
+        );
 
-
+        currentTax =
+                LocalFormat.getCurrencyFormat(
+                        totalTax.get()
+                );
     }
 
+    /**
+     * تصفير إجمالي السلة عند إنشاء الشاشة.
+     */
+    private void resetTotals() {
 
+        totalTax.set(
+                0.0
+        );
+
+        totalPrice.set(
+                0.0
+        );
+
+        totalItem = 0L;
+
+        currentTax =
+                LocalFormat.getCurrencyFormat(
+                        0.0
+                );
+
+        currentCharge =
+                LocalFormat.getCurrencyFormat(
+                        0.0
+                );
+
+        if (chargeButton != null) {
+
+            chargeButton.setText(
+                    currentCharge
+            );
+        }
+    }
 }
