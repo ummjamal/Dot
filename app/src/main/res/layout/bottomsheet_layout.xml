@@ -1,142 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
     android:orientation="vertical"
-    android:background="@drawable/dialog_bkg"
-    tools:context=".view.fragments.HomeFragment">
+    android:padding="14dp">
 
-    <ImageView
-        android:layout_width="70dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|top"
-        android:contentDescription="@string/slider"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_round_remove_24"
-        tools:ignore="ImageContrastCheck" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAlignment="viewStart"
-        android:text="@string/current_sales"
-        android:padding="8dp"
-        android:textColor="@color/black"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginTop="5dp"
-       android:layout_marginStart="12dp"/>
+    <View android:layout_width="48dp" android:layout_height="4dp" android:layout_gravity="center" android:background="@color/light_gray"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="سلة البيع" android:textColor="@color/brand_text" android:textSize="20sp" android:textStyle="bold"/>
 
-    <androidx.cardview.widget.CardView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/transactionSheetList"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:layout_marginTop="8dp"
-        android:layout_gravity="center"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp">
+        android:layout_height="260dp"
+        android:layout_marginTop="10dp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/transactionSheetList"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:listitem="@layout/order_item_design" />
-
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="12dp"
-        tools:ignore="TextSizeCheck">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="1"
-                    android:text="@string/tax"
-                    android:textColor="@color/black"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/taxTotal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="10dp"
-                    android:layout_weight="1"
-                    android:text="@string/default_charge"
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/black"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="1"
-                    android:text="@string/total"
-                    android:textColor="@color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/transactionTotal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="10dp"
-                    android:layout_weight="1"
-                    android:text="@string/default_charge"
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="10dp">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="الضريبة" android:textColor="@color/brand_text_secondary"/>
+        <TextView android:id="@+id/taxTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 ر.ي" android:textColor="@color/brand_text_secondary"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="8dp">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="الإجمالي" android:textColor="@color/brand_text" android:textSize="19sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/transactionTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 ر.ي" android:textColor="@color/brand_primary" android:textSize="20sp" android:textStyle="bold"/>
+    </LinearLayout>
 
     <Button
         android:id="@+id/checkoutButton"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_gravity="center|bottom"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="12dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:text="@string/checkout"
+        android:layout_height="60dp"
+        android:layout_marginTop="14dp"
+        android:backgroundTint="@color/brand_primary"
+        android:text="إتمام البيع النقدي"
         android:textColor="@color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:cardCornerRadius="15dp"
-        app:icon="@android:drawable/ic_lock_idle_lock"
-        app:iconGravity="textStart"
-        tools:ignore="TextContrastCheck,VisualLintButtonSize" />
-
+        android:textSize="17sp"
+        android:textStyle="bold" />
 </LinearLayout>

@@ -3,9 +3,8 @@ package com.module.dot.view.adapters;
 import static com.module.dot.utils.LocalFormat.getCurrencyFormat;
 
 import android.content.Context;
-import android.util.Log;
-import android.view.View;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -13,75 +12,42 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.module.dot.model.Order;
-import com.module.dot.utils.Utils;
 import com.module.dot.R;
+import com.module.dot.model.Order;
 
 import java.util.ArrayList;
 
-/*
- Created by Wiscarlens Lucius on 13 August 2023.
- */
-
-public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.DesignViewHolder> {
-    private  final ArrayList<Order> orderList;
+public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.Holder> {
+    private final ArrayList<Order> orders;
     private final Context context;
+    public OrdersAdapter(ArrayList<Order> orders, Context context) { this.orders = orders; this.context = context; }
 
-    public OrdersAdapter(ArrayList<Order> orderList, Context context) {
-        this.orderList = orderList;
-        this.context = context;
+    @NonNull @Override
+    public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.orders_design, parent, false));
     }
 
-    @NonNull
-    @Override
-    public OrdersAdapter.DesignViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater
-                .from(parent.getContext())
-                .inflate(R.layout.orders_design, parent, false);
-        return new DesignViewHolder(view);
+    @Override public void onBindViewHolder(@NonNull Holder h, int position) {
+        Order order = orders.get(position);
+        h.number.setText("#" + order.getOrderNumber());
+        h.date.setText(order.getOrderDate());
+        h.time.setText(order.getOrderTime());
+        h.status.setText("مكتملة");
+        h.items.setText(order.getOrderTotalItems() + " صنف/وحدة");
+        h.total.setText(getCurrencyFormat(order.getOrderTotalAmount()));
+        SelectedItemsAdapter adapter = new SelectedItemsAdapter(order.getSelectedItemList() == null ? new ArrayList<>() : order.getSelectedItemList(), context);
+        h.selected.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+        h.selected.setAdapter(adapter);
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull OrdersAdapter.DesignViewHolder holder, int position) {
-        holder.order_number.setText(Utils.formatOrderNumber(orderList.get(position).getOrderNumber()));
-        holder.order_date.setText(orderList.get(position).getOrderDate());
-        holder.order_time.setText(orderList.get(position).getOrderTime());
-        holder.order_status.setText(orderList.get(position).getOrderStatus());
-        holder.order_total_items.setText(String.valueOf(orderList.get(position).getOrderTotalItems()));
-        holder.order_total_amount.setText(getCurrencyFormat(orderList.get(position).getOrderTotalAmount()));
+    @Override public int getItemCount() { return orders.size(); }
 
-        Log.d("SelectedItemsAdapter", "onBindViewHolder: " +orderList.get(position).getSelectedItemList().size());
-
-        SelectedItemsAdapter selectedItemsAdapter = new SelectedItemsAdapter(orderList.get(position).getSelectedItemList(), context);
-
-        holder.selectedItemRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
-        holder.selectedItemRecyclerView.setAdapter(selectedItemsAdapter);
-
-    }
-
-    @Override
-    public int getItemCount() {
-        return orderList.size();
-    }
-
-    public static class DesignViewHolder extends RecyclerView.ViewHolder {
-        private final TextView order_number;
-        private final TextView order_date;
-        private final TextView order_time;
-        private final TextView order_status;
-        private final TextView order_total_items;
-        private final TextView order_total_amount;
-        private final RecyclerView selectedItemRecyclerView;
-
-        public DesignViewHolder(@NonNull View itemView) {
-            super(itemView);
-            order_number = itemView.findViewById(R.id.orderNumber);
-            order_date = itemView.findViewById(R.id.orderDate);
-            order_time = itemView.findViewById(R.id.orderTime);
-            order_status = itemView.findViewById(R.id.orderStatus);
-            order_total_items = itemView.findViewById(R.id.orderTotalItems);
-            order_total_amount = itemView.findViewById(R.id.orderTotal);
-            selectedItemRecyclerView = itemView.findViewById(R.id.selectedItemRV);
+    static class Holder extends RecyclerView.ViewHolder {
+        TextView number,date,time,status,items,total; RecyclerView selected;
+        Holder(@NonNull View v) { super(v);
+            number=v.findViewById(R.id.orderNumber); date=v.findViewById(R.id.orderDate); time=v.findViewById(R.id.orderTime);
+            status=v.findViewById(R.id.orderStatus); items=v.findViewById(R.id.orderTotalItems); total=v.findViewById(R.id.orderTotal);
+            selected=v.findViewById(R.id.selectedItemRV);
         }
     }
 }

@@ -1,77 +1,78 @@
 package com.module.dot.view.adapters;
 
-/*
- Created by Wiscarlens Lucius on 1 February 2023.
- */
-
-import static com.module.dot.utils.LocalFormat.getCurrencyFormat;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.module.dot.model.Item;
 import com.module.dot.R;
+import com.module.dot.model.Item;
+import com.module.dot.utils.LocalFormat;
 
 import java.util.ArrayList;
 
-public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.BottomViewHolder>{
+public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.Holder> {
+    public interface OnCartChangeListener {
+        void onIncrease(int position);
+        void onDecrease(int position);
+        void onRemove(int position);
+    }
+
     private final ArrayList<Item> items;
     private final Context context;
+    private final OnCartChangeListener listener;
 
     public OrderItemAdapter(ArrayList<Item> items, Context context) {
+        this(items, context, null);
+    }
+
+    public OrderItemAdapter(ArrayList<Item> items, Context context, OnCartChangeListener listener) {
         this.items = items;
         this.context = context;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
-    public BottomViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.order_item_design, parent, false);
-        return new BottomViewHolder(view);
+    public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new Holder(LayoutInflater.from(parent.getContext()).inflate(R.layout.order_item_design, parent, false));
     }
 
     @Override
-    public int getItemCount() {
-        return items.size();
+    public void onBindViewHolder(@NonNull Holder holder, int position) {
+        Item item = items.get(position);
+        holder.name.setText(item.getName());
+        holder.unitPrice.setText(LocalFormat.getCurrencyFormat(item.getPrice()));
+        holder.quantity.setText(String.valueOf(item.getQuantity()));
+        holder.total.setText(LocalFormat.getCurrencyFormat(item.getPrice() * item.getQuantity()));
+        boolean editable = listener != null;
+        holder.plus.setVisibility(editable ? View.VISIBLE : View.GONE);
+        holder.minus.setVisibility(editable ? View.VISIBLE : View.GONE);
+        holder.remove.setVisibility(editable ? View.VISIBLE : View.GONE);
+        holder.plus.setOnClickListener(v -> { if (listener != null) listener.onIncrease(holder.getBindingAdapterPosition()); });
+        holder.minus.setOnClickListener(v -> { if (listener != null) listener.onDecrease(holder.getBindingAdapterPosition()); });
+        holder.remove.setOnClickListener(v -> { if (listener != null) listener.onRemove(holder.getBindingAdapterPosition()); });
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull BottomViewHolder holder, int position) {
-        holder.itemNameTextView.setText(items.get(position).getName());
-        holder.unitPriceTextView.setText(String.valueOf(items.get(position).getPrice()));
-        holder.frequencyTextView.setText(String.valueOf(items.get(position).getQuantity()));
-        holder.totalPriceTextView.setText(getCurrencyFormat(items.get(position).getPrice() * items.get(position).getQuantity()));
+    @Override public int getItemCount() { return items.size(); }
 
-        // When User click in a product in bottom sheet
-        holder.cardView.setOnClickListener(v -> Toast.makeText(context, "You selected " + items.get(position).getName(), Toast.LENGTH_SHORT).show());
-    }
-
-    public static class BottomViewHolder extends RecyclerView.ViewHolder {
-        private final TextView itemNameTextView;
-        private final TextView frequencyTextView;
-        private final TextView unitPriceTextView;
-        private final TextView totalPriceTextView;
-        private final CardView cardView;
-
-        public BottomViewHolder(@NonNull View itemView) {
+    static class Holder extends RecyclerView.ViewHolder {
+        TextView name, quantity, unitPrice, total;
+        ImageButton plus, minus, remove;
+        Holder(@NonNull View itemView) {
             super(itemView);
-
-            itemNameTextView = itemView.findViewById(R.id.productName_design);
-            frequencyTextView = itemView.findViewById(R.id.unitTotal_design);
-            unitPriceTextView = itemView.findViewById(R.id.unitPrice_design);
-            totalPriceTextView = itemView.findViewById(R.id.totalPrice_design);
-            cardView = itemView.findViewById(R.id.bottomSheetDesignCardView);
-
+            name = itemView.findViewById(R.id.productName_design);
+            quantity = itemView.findViewById(R.id.unitTotal_design);
+            unitPrice = itemView.findViewById(R.id.unitPrice_design);
+            total = itemView.findViewById(R.id.totalPrice_design);
+            plus = itemView.findViewById(R.id.cartPlusButton);
+            minus = itemView.findViewById(R.id.cartMinusButton);
+            remove = itemView.findViewById(R.id.cartRemoveButton);
         }
     }
-
 }

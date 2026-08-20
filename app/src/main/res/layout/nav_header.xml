@@ -1,84 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="176dp"
-    android:padding="15dp"
-    android:background="@color/light_gray"
-    android:layout_marginTop="35dp"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+    android:layout_height="190dp"
+    android:background="@color/brand_primary"
+    android:gravity="bottom"
+    android:orientation="vertical"
+    android:padding="22dp">
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        app:cardCornerRadius="15dp"
-        app:cardElevation="20dp">
+    <FrameLayout
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/circle_background">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="20dp"
-            android:layout_gravity="center_vertical">
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/iv_profile_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/image_header" />
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/tv_initials"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="ش"
+            android:textColor="@color/white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+    </FrameLayout>
 
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/iv_profile_image"
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:layout_centerInParent="true"
-                    android:background="@drawable/circle_background"
-                    android:contentDescription="@string/image_header" />
+    <TextView
+        android:id="@+id/tv_fullName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="مدير البقالة"
+        android:textColor="@color/white"
+        android:textSize="17sp"
+        android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/tv_initials"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:maxLength="1"
-                    android:text="@string/default_initial"
-                    android:textColor="#FFFFFF"
-                    android:textSize="45sp"
-                    android:textStyle="bold" />
-
-            </RelativeLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="110dp">
-
-            <TextView
-                android:id="@+id/tv_fullName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/john_doe"
-                android:textColor="@color/black"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tv_email"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/johndoe_gmail_com"
-                android:textColor="@color/black"
-                android:textSize="9sp"
-                tools:ignore="SmallSp" />
-
-        </LinearLayout>
-
-
-    </androidx.cardview.widget.CardView>
-
+    <TextView
+        android:id="@+id/tv_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="admin@alshuibi.local"
+        android:textColor="#DDEFE7"
+        android:textSize="12sp" />
 </LinearLayout>

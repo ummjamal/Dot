@@ -1,207 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".view.fragments.NewItemFragment">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/add_new_item"
-        android:textSize="20sp"
-        android:textColor="@color/black"
-        android:layout_gravity="center"
-        android:padding="15dp"/>
+    android:background="@color/brand_background"
+    android:fillViewport="true">
 
     <LinearLayout
-        android:id="@+id/stepContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="10dp"
-        android:layout_marginBottom="10dp">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <View
-            android:layout_width="50dp"
-            android:layout_height="2dp"
-            android:background="@color/black"
-            android:layout_marginStart="5dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="إضافة صنف جديد" android:textColor="@color/brand_text" android:textSize="24sp" android:textStyle="bold"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="أدخل بيانات الصنف كما تريد أن تظهر في البقالة" android:textColor="@color/brand_text_secondary"/>
 
-        <!-- Step 1 -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
+        <ImageView
+            android:id="@+id/newItemImage"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginTop="16dp"
+            android:background="@color/white"
+            android:contentDescription="@string/new_item_image"
+            android:scaleType="centerCrop"
+            android:src="@drawable/uploading" />
 
-            <ImageButton
-                android:id="@+id/stepOneButton"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:background="@drawable/circular_button"
-                android:backgroundTint="@color/black"
-                android:contentDescription="@string/step2button"
-                android:src="@drawable/box_icon"
-                app:tint="@color/white"
-                tools:ignore="ImageContrastCheck" />
+        <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:hint="اسم الصنف">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/itemNameText" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/product"
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                tools:ignore="TextContrastCheck" />
+        <Spinner android:id="@+id/productCategoryText" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="10dp" android:background="@drawable/spinner_border" />
 
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="horizontal">
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="5dp" android:hint="سعر البيع">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/unitPriceText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="5dp" android:hint="سعر الشراء">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/wholesalesPrice" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <View
-            android:id="@+id/contactLeftView"
-            android:layout_width="50dp"
-            android:layout_height="2dp"
-            android:background="#B1ACAC" />
-
-        <!-- Step 2 -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageButton
-                android:id="@+id/stepTwoButton"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:background="@drawable/circular_button"
-                android:contentDescription="@string/step1button"
-                android:src="@drawable/baseline_numbers_24"
-                app:tint="@color/white"
-                tools:ignore="ImageContrastCheck" />
-
-            <TextView
-                android:id="@+id/stepTwoTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/details"
-                android:textColor="@color/light_gray"
-                android:textStyle="bold"
-                tools:ignore="TextContrastCheck" />
-
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="horizontal">
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="5dp" android:hint="الكمية">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/stockText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="5dp" android:hint="حد التنبيه">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/minStockText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <View
-            android:id="@+id/contactRightView"
-            android:layout_width="50dp"
-            android:layout_height="2dp"
-            android:background="#B1ACAC" />
+        <Spinner android:id="@+id/unitSpinner" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="10dp" android:background="@drawable/spinner_border" />
 
-        <!-- Step 3 -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <ImageButton
-                android:id="@+id/stepThreeButton"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="center"
-                android:background="@drawable/circular_button"
-                android:contentDescription="@string/step3button"
-                android:src="@drawable/baseline_attach_money_24"
-                app:tint="#FFFFFF"
-                tools:ignore="ImageContrastCheck" />
-
-            <TextView
-                android:id="@+id/stepThreeTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/price"
-                android:textColor="@color/light_gray"
-                android:textStyle="bold"
-                tools:ignore="TextContrastCheck" />
-
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="الباركود">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/SKUText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <Button android:id="@+id/scanBarcodeButton" android:layout_width="72dp" android:layout_height="56dp" android:layout_marginStart="8dp" android:backgroundTint="@color/brand_blue" android:text="مسح" android:textColor="@color/white"/>
         </LinearLayout>
 
-        <View
-            android:id="@+id/OtherRightView"
-            android:layout_width="50dp"
-            android:layout_height="2dp"
-            android:layout_marginEnd="5dp"
-            android:background="#B1ACAC" />
+        <com.google.android.material.textfield.TextInputLayout style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:hint="الوصف / ملاحظات">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/productDescriptionText" android:layout_width="match_parent" android:layout_height="100dp" android:gravity="top" android:inputType="textMultiLine" />
+        </com.google.android.material.textfield.TextInputLayout>
 
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal">
+            <Button android:id="@+id/cancelButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginEnd="5dp" android:backgroundTint="@color/light_gray" android:text="إلغاء" android:textColor="@color/brand_text"/>
+            <Button android:id="@+id/saveButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="2" android:layout_marginStart="5dp" android:backgroundTint="@color/brand_primary" android:text="حفظ الصنف" android:textColor="@color/white" android:textStyle="bold"/>
+        </LinearLayout>
     </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/progress_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:max="100"
-        style="@style/CustomProgressBar"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="10dp" />
-
-    <!-- Step Content -->
-    <FrameLayout
-        android:id="@+id/stepContentContainer"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_gravity="center">
-
-        <include layout="@layout/new_item_form_step_one" />
-
-    </FrameLayout>
-
-    <!-- Previous and Next Buttons -->
-    <LinearLayout
-        android:id="@+id/buttonContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp"
-        android:gravity="center">
-
-        <ImageButton
-            android:id="@+id/previousButton"
-            android:layout_width="80dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="20dp"
-            android:background="@drawable/button_style"
-            android:src="@drawable/baseline_arrow_back_24"
-            app:tint="@color/black"
-            android:contentDescription="@string/previousButton"/>
-
-        <ImageButton
-            android:id="@+id/nextButton"
-            android:layout_width="80dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="20dp"
-            android:background="@drawable/button_style"
-            android:backgroundTint="@color/black"
-            android:contentDescription="@string/nextButton"
-            android:src="@drawable/baseline_arrow_forward_24"
-            app:tint="@color/white"
-            tools:ignore="ImageContrastCheck" />
-
-        <Button
-            android:id="@+id/saveButton"
-            android:layout_width="80dp"
-            android:layout_height="58dp"
-            android:text="@string/save"
-            android:textColor="@color/black"
-            android:backgroundTint="#4CAF50"
-            android:layout_marginStart="20dp"
-            android:contentDescription="@string/nextButton"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-
-</LinearLayout>
+</ScrollView>

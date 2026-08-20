@@ -1,17 +1,34 @@
 package com.module.dot;
 
+import com.module.dot.model.Item;
+import com.module.dot.utils.LocalFormat;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
 public class ExampleUnitTest {
+
     @Test
-    public void addition_isCorrect() {
-        assertEquals(4, 2 + 2);
+    public void currency_isFormattedAsYemeniRial() {
+        assertEquals("0 ر.ي", LocalFormat.getCurrencyFormat(0));
+        assertEquals("1,500 ر.ي", LocalFormat.getCurrencyFormat(1500));
+    }
+
+    @Test
+    public void item_defaultsAreSafe() {
+        Item item = new Item();
+        item.setName(null);
+        item.setSku(null);
+        item.setCategory(null);
+        item.setUnitType(null);
+        item.setStock(-4);
+        assertEquals("", item.getName());
+        assertEquals("", item.getSku());
+        assertEquals("أخرى", item.getCategory());
+        assertEquals("حبة", item.getUnitType());
+        assertEquals(0, item.getStock());
+        assertTrue(item.getMinStock() >= 0);
     }
 }

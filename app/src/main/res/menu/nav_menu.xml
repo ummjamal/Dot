@@ -1,58 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:showIn="navigation_view">
-
-    <group
-        android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_home"
-            android:icon="@drawable/baseline_home_24"
-            android:title="@string/home"/>
-
-        <item
-            android:id="@+id/nav_users"
-            android:icon="@drawable/baseline_users_alt_24"
-            android:title="@string/users"/>
-
-        <item
-            android:id="@+id/nav_items"
-            android:icon="@drawable/baseline_sell_24"
-            android:title="@string/item"/>
-
-        <item
-            android:id="@+id/nav_orders"
-            android:icon="@drawable/baseline_shopping_bag_24"
-            android:title="@string/orders"/>
-
-        <item
-            android:id="@+id/nav_transactions"
-            android:icon="@drawable/baseline_compare_arrows_24"
-            android:title="@string/transaction"/>
-
-        <item
-            android:id="@+id/nav_settings"
-            android:icon="@drawable/baseline_settings_24"
-            android:title="@string/settings"/>
-
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/nav_home" android:icon="@drawable/baseline_home_24" android:title="الرئيسية والبيع" />
+        <item android:id="@+id/nav_items" android:icon="@drawable/baseline_sell_24" android:title="الأصناف والمخزون" />
+        <item android:id="@+id/nav_orders" android:icon="@drawable/baseline_receipt_24" android:title="الفواتير" />
+        <item android:id="@+id/nav_transactions" android:icon="@drawable/baseline_compare_arrows_24" android:title="المبيعات" />
+        <item android:id="@+id/nav_users" android:icon="@drawable/baseline_users_alt_24" android:title="المستخدمون" />
+        <item android:id="@+id/nav_settings" android:icon="@drawable/baseline_settings_24" android:title="الإعدادات" />
     </group>
-
-
-    <item
-        android:title="">
-
+    <item android:title="">
         <menu>
-
-            <group android:checkableBehavior="single">
-
-                <item
-                    android:id="@+id/nav_logout"
-                    android:icon="@drawable/baseline_logout_24"
-                    android:title="@string/logout"/>
-
-            </group>
+            <item android:id="@+id/nav_logout" android:icon="@drawable/baseline_logout_24" android:title="تسجيل الخروج" />
         </menu>
-
     </item>
-
 </menu>

@@ -164,7 +164,7 @@
 
     <string name="close_button">إغلاق</string>
     <string name="john_doe">مدير البقالة</string>
-    <string name="johndoe_gmail_com">example@email.com</string>
+    <string name="johndoe_gmail_com">admin@alshuibi.local</string>
     <string name="address">العنوان</string>
     <string name="default_initial">ش</string>
     <string name="image_header">الصورة</string>

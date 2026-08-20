@@ -1,81 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="7dp"
+    app:cardBackgroundColor="@color/brand_surface"
+    app:cardCornerRadius="12dp"
+    app:strokeColor="#E5ECE8"
+    app:strokeWidth="1dp">
 
-    <androidx.cardview.widget.CardView
+    <LinearLayout
         android:id="@+id/bottomSheetDesignCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="10dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal"
-            android:paddingTop="5dp">
-
-            <TextView
-                android:id="@+id/productName_design"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="@string/product_name"
-                android:textAlignment="textStart"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/unitPrice_design"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp"
-               android:layout_marginStart="10dp"
-                android:text="@string/zero_dollar"
-                android:textAlignment="viewStart"
-                android:textColor="@color/black"
-                android:textSize="11sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/total_unit"
-                android:textAlignment="viewEnd"
-                android:textColor="@color/black"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/unitTotal_design"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:text="@string/One"
-                android:textAlignment="textEnd"
-                android:textColor="@color/black"
-                android:textSize="11sp" />
-
-
-
-            <TextView
-                android:id="@+id/totalPrice_design"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:layout_weight="1"
-                android:text="@string/zero_dollar"
-                android:textAlignment="viewEnd"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:id="@+id/productName_design" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="الصنف" android:textColor="@color/brand_text" android:textSize="14sp" android:textStyle="bold"/>
+            <TextView android:id="@+id/unitPrice_design" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="0 ر.ي" android:textColor="@color/brand_text_secondary" android:textSize="12sp"/>
+            <TextView android:id="@+id/totalPrice_design" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="0 ر.ي" android:textColor="@color/brand_primary" android:textStyle="bold"/>
         </LinearLayout>
 
-    </androidx.cardview.widget.CardView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageButton android:id="@+id/cartMinusButton" android:layout_width="38dp" android:layout_height="38dp" android:background="@android:color/transparent" android:contentDescription="نقص" android:src="@drawable/ic_round_remove_24" app:tint="@color/brand_warning"/>
+        <TextView android:id="@+id/unitTotal_design" android:layout_width="38dp" android:layout_height="wrap_content" android:gravity="center" android:text="1" android:textColor="@color/brand_text" android:textSize="16sp" android:textStyle="bold"/>
+        <ImageButton android:id="@+id/cartPlusButton" android:layout_width="38dp" android:layout_height="38dp" android:background="@android:color/transparent" android:contentDescription="زيادة" android:src="@drawable/baseline_add_24" app:tint="@color/brand_success"/>
+        <ImageButton android:id="@+id/cartRemoveButton" android:layout_width="38dp" android:layout_height="38dp" android:background="@android:color/transparent" android:contentDescription="حذف" android:src="@drawable/baseline_close_24" app:tint="@color/brand_error"/>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
