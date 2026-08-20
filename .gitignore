@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+.vscode/
+*.apk
+*.jks
+*.keystore
