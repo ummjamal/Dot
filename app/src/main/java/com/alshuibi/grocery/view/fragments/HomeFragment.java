@@ -12,6 +12,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -24,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -91,6 +93,8 @@ public class HomeFragment extends Fragment {
             if (!barcode.isEmpty()) addBarcodeToCart(barcode);
         });
 
+        configureSearch(searchView, "ابحث باسم الصنف أو الباركود");
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override public boolean onQueryTextSubmit(String query) { filter(query); return true; }
             @Override public boolean onQueryTextChange(String newText) { filter(newText); return true; }
@@ -130,9 +134,12 @@ public class HomeFragment extends Fragment {
         if (query.isEmpty()) visibleItems.addAll(allItems);
         else {
             for (Item item : allItems) {
-                if (item.getName().toLowerCase(Locale.ROOT).contains(query)
-                        || item.getCategory().toLowerCase(Locale.ROOT).contains(query)
-                        || item.getSku().toLowerCase(Locale.ROOT).contains(query)) {
+                String name = item.getName() == null ? "" : item.getName();
+                String category = item.getCategory() == null ? "" : item.getCategory();
+                String sku = item.getSku() == null ? "" : item.getSku();
+                if (name.toLowerCase(Locale.ROOT).contains(query)
+                        || category.toLowerCase(Locale.ROOT).contains(query)
+                        || sku.toLowerCase(Locale.ROOT).contains(query)) {
                     visibleItems.add(item);
                 }
             }
@@ -393,6 +400,32 @@ public class HomeFragment extends Fragment {
         if (normalized.isEmpty()) return 0;
         try { return Math.max(0, Long.parseLong(normalized)); }
         catch (NumberFormatException ignored) { return 0; }
+    }
+
+    private void configureSearch(SearchView searchView, String hint) {
+        searchView.setIconifiedByDefault(false);
+        searchView.setIconified(false);
+        searchView.setQueryHint(hint);
+        searchView.setFocusable(true);
+        searchView.setFocusableInTouchMode(true);
+
+        android.widget.AutoCompleteTextView input = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        if (input != null) {
+            input.setSingleLine(true);
+            input.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_text));
+            input.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.brand_text_secondary));
+
+            View.OnClickListener focusSearch = v -> {
+                searchView.setIconified(false);
+                input.requestFocus();
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+            };
+            input.setOnClickListener(focusSearch);
+            searchView.setOnClickListener(focusSearch);
+        }
+
+        searchView.clearFocus();
     }
 
 }

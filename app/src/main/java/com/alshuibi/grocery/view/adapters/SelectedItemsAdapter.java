@@ -43,11 +43,15 @@ public class SelectedItemsAdapter extends RecyclerView.Adapter<SelectedItemsAdap
     public void onBindViewHolder(@NonNull DesignViewHolder holder, int position) {
         Drawable itemImage;
 
-        if (selectedItems.get(position).getImagePath() != null) {
-            itemImage = FileManager.loadImageLocally(context, "Items", selectedItems.get(position).getGlobalID());
+        Item item = selectedItems.get(position);
+        String imagePath = item.getImagePath();
+        if (imagePath != null && !imagePath.trim().isEmpty()) {
+            itemImage = FileManager.loadImageLocally(context, "Items", imagePath);
         } else {
-            // Default image
-            // TODO: Use category image when item image is not available
+            itemImage = null;
+        }
+
+        if (itemImage == null) {
             itemImage = ContextCompat.getDrawable(context, R.drawable.baseline_no_image_24);
         }
 

@@ -1,11 +1,13 @@
 package com.alshuibi.grocery.view.fragments;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -17,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -66,6 +69,8 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
         add.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new NewItemFragment())
                 .addToBackStack(null).commit());
+        configureSearch(search, "ابحث بالاسم أو القسم أو الباركود");
+
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override public boolean onQueryTextSubmit(String query) { currentQuery = query == null ? "" : query; applyFilters(); return true; }
             @Override public boolean onQueryTextChange(String newText) { currentQuery = newText == null ? "" : newText; applyFilters(); return true; }
@@ -94,10 +99,13 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
         String q = currentQuery == null ? "" : currentQuery.trim().toLowerCase(Locale.ROOT);
         visibleItems.clear();
         for (Item item : allItems) {
+            String name = item.getName() == null ? "" : item.getName();
+            String category = item.getCategory() == null ? "" : item.getCategory();
+            String sku = item.getSku() == null ? "" : item.getSku();
             boolean textMatch = q.isEmpty()
-                    || item.getName().toLowerCase(Locale.ROOT).contains(q)
-                    || item.getCategory().toLowerCase(Locale.ROOT).contains(q)
-                    || item.getSku().toLowerCase(Locale.ROOT).contains(q);
+                    || name.toLowerCase(Locale.ROOT).contains(q)
+                    || category.toLowerCase(Locale.ROOT).contains(q)
+                    || sku.toLowerCase(Locale.ROOT).contains(q);
             boolean stockMatch = stockFilter == 0
                     || (stockFilter == 1 && item.getStock() > 0 && item.getStock() <= item.getMinStock())
                     || (stockFilter == 2 && item.getStock() <= 0);
@@ -227,4 +235,30 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
                 .replace("٤","4").replace("٥","5").replace("٦","6").replace("٧","7")
                 .replace("٨","8").replace("٩","9").replace("٫",".").replace("٬","").replace(",","");
     }
+    private void configureSearch(SearchView searchView, String hint) {
+        searchView.setIconifiedByDefault(false);
+        searchView.setIconified(false);
+        searchView.setQueryHint(hint);
+        searchView.setFocusable(true);
+        searchView.setFocusableInTouchMode(true);
+
+        android.widget.AutoCompleteTextView input = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        if (input != null) {
+            input.setSingleLine(true);
+            input.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_text));
+            input.setHintTextColor(ContextCompat.getColor(requireContext(), R.color.brand_text_secondary));
+
+            View.OnClickListener focusSearch = v -> {
+                searchView.setIconified(false);
+                input.requestFocus();
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+            };
+            input.setOnClickListener(focusSearch);
+            searchView.setOnClickListener(focusSearch);
+        }
+
+        searchView.clearFocus();
+    }
+
 }

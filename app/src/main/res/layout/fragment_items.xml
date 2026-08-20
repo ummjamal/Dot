@@ -85,8 +85,8 @@
         android:layout_height="56dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/search_field_background"
-        android:iconifiedByDefault="false"
-        android:queryHint="ابحث بالاسم أو القسم أو الباركود"
+        app:iconifiedByDefault="false"
+        app:queryHint="ابحث بالاسم أو القسم أو الباركود"
         app:layout_constraintTop_toBottomOf="@id/inventorySummaryCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

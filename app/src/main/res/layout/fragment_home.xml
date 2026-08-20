@@ -106,8 +106,8 @@
         android:layout_marginTop="12dp"
         android:layout_marginEnd="12dp"
         android:background="@drawable/search_field_background"
-        android:iconifiedByDefault="false"
-        android:queryHint="ابحث باسم الصنف أو الباركود"
+        app:iconifiedByDefault="false"
+        app:queryHint="ابحث باسم الصنف أو الباركود"
         app:layout_constraintTop_toBottomOf="@id/statsBlock"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
