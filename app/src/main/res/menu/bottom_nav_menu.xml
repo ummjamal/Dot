@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_home" android:icon="@drawable/baseline_home_24" android:title="الرئيسية" />
+    <item android:id="@+id/nav_customers" android:icon="@drawable/ic_customers_24" android:title="العملاء" />
+    <item android:id="@+id/nav_items" android:icon="@drawable/baseline_sell_24" android:title="المخزون" />
+    <item android:id="@+id/nav_orders" android:icon="@drawable/baseline_receipt_24" android:title="الفواتير" />
+    <item android:id="@+id/nav_more" android:icon="@drawable/ic_more_24" android:title="المزيد" />
+</menu>

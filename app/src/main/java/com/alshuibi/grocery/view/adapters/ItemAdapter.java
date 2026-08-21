@@ -59,7 +59,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         if (item.getImagePath() != null && !item.getImagePath().trim().isEmpty()) {
             image = FileManager.loadImageLocally(context, "Items", item.getImagePath());
         }
-        if (image == null) image = ContextCompat.getDrawable(context, R.drawable.baseline_no_image_24);
+        if (image == null) image = ContextCompat.getDrawable(context, R.drawable.ic_product_placeholder_24);
         holder.image.setImageDrawable(image);
         holder.name.setText(item.getName());
         holder.category.setText(item.getCategory().isEmpty() ? "بدون قسم" : item.getCategory());

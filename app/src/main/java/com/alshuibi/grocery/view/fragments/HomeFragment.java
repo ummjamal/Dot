@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +36,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.alshuibi.grocery.R;
 import com.alshuibi.grocery.data.local.GroceryDatabase;
 import com.alshuibi.grocery.model.Item;
+import com.alshuibi.grocery.model.Customer;
 import com.alshuibi.grocery.model.Order;
 import com.alshuibi.grocery.utils.LocalFormat;
 import com.alshuibi.grocery.utils.FeedbackManager;
@@ -47,6 +49,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class HomeFragment extends Fragment {
+    private static final String TAG = "HomeFragment";
     private static final String BARCODE_KEY = "home_barcode_result";
     private FragmentActivity fragmentActivity;
     private Button chargeButton;
@@ -292,11 +295,21 @@ public class HomeFragment extends Fragment {
         com.google.android.material.textfield.TextInputEditText notes = checkoutDialog.findViewById(R.id.checkoutNotes);
         com.google.android.material.textfield.TextInputLayout receivedLayout = checkoutDialog.findViewById(R.id.checkoutReceivedLayout);
         Spinner payment = checkoutDialog.findViewById(R.id.checkoutPaymentMethod);
+        Spinner customerSpinner = checkoutDialog.findViewById(R.id.checkoutCustomer);
+        LinearLayout customerSection = checkoutDialog.findViewById(R.id.checkoutCustomerSection);
         Button cancel = checkoutDialog.findViewById(R.id.checkoutCancel);
         Button confirm = checkoutDialog.findViewById(R.id.checkoutConfirm);
 
-        String[] paymentLabels = {"نقدي", "تحويل"};
+        String[] paymentLabels = {"نقدي", "تحويل بنكي", "محفظة إلكترونية", "آجل / على الحساب"};
         payment.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, paymentLabels));
+        ArrayList<Customer> customers = new ArrayList<>();
+        ArrayList<String> customerLabels = new ArrayList<>();
+        customerLabels.add("اختر العميل");
+        try (GroceryDatabase db = new GroceryDatabase(requireContext())) {
+            customers.addAll(db.getCustomers());
+            for (Customer c : customers) customerLabels.add(c.getName() + (c.getBalance() > 0 ? " • عليه " + LocalFormat.getCurrencyFormat(c.getBalance()) : ""));
+        }
+        customerSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, customerLabels));
         gross.setText(LocalFormat.getCurrencyFormat(cartTotal()));
         discount.setText("0");
         received.setText(String.valueOf(cartTotal()));
@@ -306,9 +319,13 @@ public class HomeFragment extends Fragment {
             long discountValue = parseMoney(discount.getText() == null ? "" : discount.getText().toString());
             discountValue = Math.max(0, Math.min(discountValue, total));
             long netValue = total - discountValue;
-            boolean transfer = payment.getSelectedItemPosition() == 1;
-            receivedLayout.setEnabled(!transfer);
-            if (transfer) {
+            int paymentPos = payment.getSelectedItemPosition();
+            boolean cash = paymentPos == 0;
+            boolean electronic = paymentPos == 1 || paymentPos == 2;
+            boolean credit = paymentPos == 3;
+            customerSection.setVisibility(credit ? View.VISIBLE : View.GONE);
+            receivedLayout.setEnabled(cash);
+            if (electronic) {
                 String expected = String.valueOf(netValue);
                 String current = received.getText() == null ? "" : received.getText().toString();
                 if (!expected.equals(current)) {
@@ -316,11 +333,17 @@ public class HomeFragment extends Fragment {
                     received.setSelection(received.length());
                     return;
                 }
+            } else if (credit) {
+                if (!"0".equals(received.getText() == null ? "" : received.getText().toString())) {
+                    received.setText("0");
+                    received.setSelection(received.length());
+                    return;
+                }
             }
             long receivedValue = parseMoney(received.getText() == null ? "" : received.getText().toString());
-            long changeValue = transfer ? 0 : Math.max(0, receivedValue - netValue);
+            long changeValue = cash ? Math.max(0, receivedValue - netValue) : 0;
             net.setText(LocalFormat.getCurrencyFormat(netValue));
-            change.setText(LocalFormat.getCurrencyFormat(changeValue));
+            change.setText(credit ? "يضاف إلى حساب العميل" : LocalFormat.getCurrencyFormat(changeValue));
         };
 
         TextWatcher watcher = new TextWatcher() {
@@ -341,21 +364,39 @@ public class HomeFragment extends Fragment {
             long grossValue = cartTotal();
             long discountValue = Math.max(0, Math.min(parseMoney(discount.getText() == null ? "" : discount.getText().toString()), grossValue));
             long due = grossValue - discountValue;
-            boolean transfer = payment.getSelectedItemPosition() == 1;
-            long receivedValue = transfer ? due : parseMoney(received.getText() == null ? "" : received.getText().toString());
-            if (!transfer && receivedValue < due) {
+            int paymentPos = payment.getSelectedItemPosition();
+            boolean cash = paymentPos == 0;
+            boolean credit = paymentPos == 3;
+            String paymentCode = paymentPos == 1 ? "transfer" : (paymentPos == 2 ? "wallet" : (credit ? "credit" : "cash"));
+            long receivedValue = cash ? parseMoney(received.getText() == null ? "" : received.getText().toString()) : (credit ? 0 : due);
+            if (cash && receivedValue < due) {
                 received.setError("المبلغ المستلم أقل من المطلوب");
                 FeedbackManager.error(requireContext());
                 return;
             }
+            String customerId = null;
+            String customerName = null;
+            if (credit) {
+                int selected = customerSpinner.getSelectedItemPosition();
+                if (selected <= 0 || selected - 1 >= customers.size()) {
+                    Toast.makeText(requireContext(), "اختر العميل للبيع على الحساب", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                Customer chosen = customers.get(selected - 1);
+                customerId = chosen.getGlobalId();
+                customerName = chosen.getName();
+            }
+            String workerId = MainActivity.currentUser == null ? null : MainActivity.currentUser.getGlobalID();
             confirm.setEnabled(false);
             try (GroceryDatabase db = new GroceryDatabase(requireContext())) {
                 Order sale = db.completeSale(
                         selectedItems,
-                        transfer ? "transfer" : "cash",
+                        paymentCode,
                         discountValue,
                         receivedValue,
-                        notes.getText() == null ? "" : notes.getText().toString());
+                        notes.getText() == null ? "" : notes.getText().toString(),
+                        customerId,
+                        workerId);
                 selectedItems.clear();
                 checkoutDialog.dismiss();
                 cartDialog.dismiss();
@@ -370,6 +411,9 @@ public class HomeFragment extends Fragment {
                 if (sale.getChangeAmount() > 0) {
                     message.append("\nالباقي للعميل: ").append(LocalFormat.getCurrencyFormat(sale.getChangeAmount()));
                 }
+                if (credit && customerName != null) {
+                    message.append("\nأضيفت الفاتورة إلى حساب: ").append(customerName);
+                }
                 new AlertDialog.Builder(requireContext())
                         .setTitle("تم البيع بنجاح")
                         .setMessage(message.toString())
@@ -378,7 +422,12 @@ public class HomeFragment extends Fragment {
             } catch (Exception e) {
                 confirm.setEnabled(true);
                 FeedbackManager.error(requireContext());
-                Toast.makeText(requireContext(), "تعذر إتمام البيع: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Sale completion failed", e);
+                String message = e.getMessage();
+                if (message == null || message.trim().isEmpty() || message.toLowerCase(Locale.ROOT).contains("sqlite")) {
+                    message = "تعذر حفظ الفاتورة بأمان. لم يتم اعتماد العملية؛ حاول مرة أخرى.";
+                }
+                Toast.makeText(requireContext(), "تعذر إتمام البيع: " + message, Toast.LENGTH_LONG).show();
             }
         });
 
@@ -409,7 +458,7 @@ public class HomeFragment extends Fragment {
         searchView.setFocusable(true);
         searchView.setFocusableInTouchMode(true);
 
-        android.widget.AutoCompleteTextView input = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        android.widget.EditText input = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
         if (input != null) {
             input.setSingleLine(true);
             input.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_text));

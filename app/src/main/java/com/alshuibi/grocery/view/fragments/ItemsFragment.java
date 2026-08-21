@@ -30,6 +30,7 @@ import com.alshuibi.grocery.data.local.GroceryDatabase;
 import com.alshuibi.grocery.model.Item;
 import com.alshuibi.grocery.utils.FileManager;
 import com.alshuibi.grocery.utils.LocalFormat;
+import com.alshuibi.grocery.view.MainActivity;
 import com.alshuibi.grocery.view.adapters.ItemAdapter;
 
 import java.util.ArrayList;
@@ -66,6 +67,8 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
         recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         adapter = new ItemAdapter(visibleItems, requireContext(), this);
         recyclerView.setAdapter(adapter);
+        boolean owner = MainActivity.currentUser != null && "Administrator".equalsIgnoreCase(MainActivity.currentUser.getPositionTitle());
+        add.setVisibility(owner ? View.VISIBLE : View.GONE);
         add.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new NewItemFragment())
                 .addToBackStack(null).commit());
@@ -123,6 +126,10 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
 
     @Override
     public void onItemLongClick(Item item) {
+        if (MainActivity.currentUser == null || !"Administrator".equalsIgnoreCase(MainActivity.currentUser.getPositionTitle())) {
+            Toast.makeText(requireContext(), "تعديل المخزون متاح للمالك فقط", Toast.LENGTH_SHORT).show();
+            return;
+        }
         new AlertDialog.Builder(requireContext())
                 .setTitle(item.getName())
                 .setItems(new String[]{"تعديل بيانات الصنف", "إضافة/سحب مخزون", "حذف الصنف"}, (d, which) -> {
@@ -242,7 +249,7 @@ public class ItemsFragment extends Fragment implements ItemAdapter.OnItemActionL
         searchView.setFocusable(true);
         searchView.setFocusableInTouchMode(true);
 
-        android.widget.AutoCompleteTextView input = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
+        android.widget.EditText input = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
         if (input != null) {
             input.setSingleLine(true);
             input.setTextColor(ContextCompat.getColor(requireContext(), R.color.brand_text));

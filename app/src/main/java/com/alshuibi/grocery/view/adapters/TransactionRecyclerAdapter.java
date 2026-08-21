@@ -37,7 +37,10 @@ public class TransactionRecyclerAdapter extends RecyclerView.Adapter<Transaction
         h.total.setText(getCurrencyFormat(t.getTransactionTotal()));
         h.total.setAlpha(cancelled ? 0.55f : 1f);
         h.itemView.setAlpha(cancelled ? 0.72f : 1f);
-        h.payment.setImageResource("transfer".equalsIgnoreCase(t.getPaymentMethod()) ? R.drawable.baseline_compare_arrows_24 : R.drawable.baseline_money_24);
+        String pm = t.getPaymentMethod();
+        if ("credit".equalsIgnoreCase(pm)) h.payment.setImageResource(R.drawable.ic_customers_24);
+        else if ("transfer".equalsIgnoreCase(pm) || "wallet".equalsIgnoreCase(pm)) h.payment.setImageResource(R.drawable.baseline_compare_arrows_24);
+        else h.payment.setImageResource(R.drawable.baseline_money_24);
     }
     @Override public int getItemCount() { return transactions.size(); }
 

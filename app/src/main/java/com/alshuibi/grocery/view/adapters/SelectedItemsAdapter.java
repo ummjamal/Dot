@@ -52,7 +52,7 @@ public class SelectedItemsAdapter extends RecyclerView.Adapter<SelectedItemsAdap
         }
 
         if (itemImage == null) {
-            itemImage = ContextCompat.getDrawable(context, R.drawable.baseline_no_image_24);
+            itemImage = ContextCompat.getDrawable(context, R.drawable.ic_product_placeholder_24);
         }
 
         holder.selectedItem_ImageView.setImageDrawable(itemImage);

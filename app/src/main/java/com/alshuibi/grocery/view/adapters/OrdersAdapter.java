@@ -119,7 +119,9 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.Holder> {
     }
 
     private String paymentLabel(String method) {
-        if ("transfer".equalsIgnoreCase(method)) return "تحويل";
+        if ("transfer".equalsIgnoreCase(method)) return "تحويل بنكي";
+        if ("wallet".equalsIgnoreCase(method)) return "محفظة إلكترونية";
+        if ("credit".equalsIgnoreCase(method)) return "آجل / على الحساب";
         return "نقدي";
     }
 

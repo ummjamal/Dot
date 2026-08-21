@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import androidx.annotation.Nullable;
 
 import com.alshuibi.grocery.model.Item;
+import com.alshuibi.grocery.model.Customer;
 import com.alshuibi.grocery.model.Order;
 import com.alshuibi.grocery.model.Transaction;
 import com.alshuibi.grocery.model.User;
@@ -27,7 +28,7 @@ import java.util.UUID;
 public class GroceryDatabase extends SQLiteOpenHelper {
     private static final String TAG = "GroceryDatabase";
     public static final String DATABASE_NAME = "BaqalatAlshuibi.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 5;
     protected final Context context;
 
     public GroceryDatabase(@Nullable Context context) {
@@ -90,6 +91,9 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                 "paid_amount INTEGER NOT NULL DEFAULT 0," +
                 "change_amount INTEGER NOT NULL DEFAULT 0," +
                 "notes TEXT NOT NULL DEFAULT ''," +
+                "customer_global_id TEXT," +
+                "worker_global_id TEXT," +
+                "sync_status TEXT NOT NULL DEFAULT 'LOCAL'," +
                 "status TEXT NOT NULL DEFAULT 'Completed')");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS sale_items (" +
@@ -97,6 +101,7 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                 "sale_id INTEGER NOT NULL," +
                 "item_global_id TEXT NOT NULL," +
                 "item_name TEXT NOT NULL," +
+                "image_path TEXT," +
                 "quantity INTEGER NOT NULL," +
                 "unit_price INTEGER NOT NULL," +
                 "purchase_price INTEGER NOT NULL," +
@@ -104,6 +109,38 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                 "line_cost INTEGER NOT NULL," +
                 "line_profit INTEGER NOT NULL," +
                 "FOREIGN KEY(sale_id) REFERENCES sales(_id) ON DELETE CASCADE)");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS customers (" +
+                "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "global_id TEXT NOT NULL UNIQUE," +
+                "name TEXT NOT NULL," +
+                "phone TEXT NOT NULL DEFAULT ''," +
+                "address TEXT NOT NULL DEFAULT ''," +
+                "credit_limit INTEGER NOT NULL DEFAULT 0," +
+                "active INTEGER NOT NULL DEFAULT 1," +
+                "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS customer_ledger (" +
+                "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "global_id TEXT NOT NULL UNIQUE," +
+                "customer_global_id TEXT NOT NULL," +
+                "entry_type TEXT NOT NULL," +
+                "amount INTEGER NOT NULL," +
+                "sale_global_id TEXT," +
+                "worker_global_id TEXT," +
+                "note TEXT NOT NULL DEFAULT ''," +
+                "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS sync_queue (" +
+                "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "entity_type TEXT NOT NULL," +
+                "entity_id TEXT NOT NULL," +
+                "operation TEXT NOT NULL," +
+                "payload TEXT NOT NULL DEFAULT ''," +
+                "state TEXT NOT NULL DEFAULT 'PENDING'," +
+                "attempts INTEGER NOT NULL DEFAULT 0," +
+                "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS users (" +
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -151,9 +188,51 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                     "entity_id TEXT," +
                     "details TEXT NOT NULL DEFAULT ''," +
                     "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
-            createIndexes(db);
             putSetting(db, "receipt_footer", "شكرًا لتسوقكم من بقالة الشعيبي");
             putSetting(db, "currency", "ر.ي");
+        }
+        if (oldVersion < 4) {
+            addColumnIfMissing(db, "sales", "customer_global_id", "TEXT");
+            addColumnIfMissing(db, "sales", "worker_global_id", "TEXT");
+            addColumnIfMissing(db, "sales", "sync_status", "TEXT NOT NULL DEFAULT 'LOCAL'");
+            db.execSQL("CREATE TABLE IF NOT EXISTS customers (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "global_id TEXT NOT NULL UNIQUE," +
+                    "name TEXT NOT NULL," +
+                    "phone TEXT NOT NULL DEFAULT ''," +
+                    "address TEXT NOT NULL DEFAULT ''," +
+                    "credit_limit INTEGER NOT NULL DEFAULT 0," +
+                    "active INTEGER NOT NULL DEFAULT 1," +
+                    "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE TABLE IF NOT EXISTS customer_ledger (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "global_id TEXT NOT NULL UNIQUE," +
+                    "customer_global_id TEXT NOT NULL," +
+                    "entry_type TEXT NOT NULL," +
+                    "amount INTEGER NOT NULL," +
+                    "sale_global_id TEXT," +
+                    "worker_global_id TEXT," +
+                    "note TEXT NOT NULL DEFAULT ''," +
+                    "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+            db.execSQL("CREATE TABLE IF NOT EXISTS sync_queue (" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "entity_type TEXT NOT NULL," +
+                    "entity_id TEXT NOT NULL," +
+                    "operation TEXT NOT NULL," +
+                    "payload TEXT NOT NULL DEFAULT ''," +
+                    "state TEXT NOT NULL DEFAULT 'PENDING'," +
+                    "attempts INTEGER NOT NULL DEFAULT 0," +
+                    "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+            putSetting(db, "store_address", "اليمن - محافظة الضالع - مديرية قعطبة - حي المحكمة - جوار محكمة قعطبة الابتدائية");
+            db.execSQL("UPDATE app_settings SET setting_value='اليمن - محافظة الضالع - مديرية قعطبة - حي المحكمة - جوار محكمة قعطبة الابتدائية' WHERE setting_key='store_address'");
+            putSetting(db, "cloud_sync_enabled", "0");
+            putSetting(db, "voice_credit_enabled", "1");
+            createIndexes(db);
+        }
+        if (oldVersion < 5) {
+            addColumnIfMissing(db, "sale_items", "image_path", "TEXT");
+            createIndexes(db);
         }
     }
 
@@ -178,6 +257,10 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_sales_date_status ON sales(sale_date,status)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_stock_item_created ON stock_movements(item_global_id,created_at)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_customer_ledger_customer ON customer_ledger(customer_global_id,created_at)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales(customer_global_id,sale_date)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_sales_worker ON sales(worker_global_id,sale_date)");
     }
 
     private void seedDefaults(SQLiteDatabase db) {
@@ -207,10 +290,12 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         putSetting(db, "owner_name", "علي صالح الشعيبي");
         putSetting(db, "owner_email", "alisaleh10302040@gmail.com");
         putSetting(db, "owner_phone", "");
-        putSetting(db, "store_address", "الضالع - اليمن");
+        putSetting(db, "store_address", "اليمن - محافظة الضالع - مديرية قعطبة - حي المحكمة - جوار محكمة قعطبة الابتدائية");
         putSetting(db, "low_stock_default", "5");
         putSetting(db, "receipt_footer", "شكرًا لتسوقكم من بقالة الشعيبي");
         putSetting(db, "currency", "ر.ي");
+        putSetting(db, "cloud_sync_enabled", "0");
+        putSetting(db, "voice_credit_enabled", "1");
 
         Cursor c = db.rawQuery("SELECT COUNT(*) FROM users", null);
         boolean empty = c.moveToFirst() && c.getInt(0) == 0;
@@ -235,8 +320,8 @@ public class GroceryDatabase extends SQLiteOpenHelper {
     }
 
     public String getSetting(String key, String fallback) {
-        try (SQLiteDatabase db = getReadableDatabase();
-             Cursor c = db.rawQuery("SELECT setting_value FROM app_settings WHERE setting_key=?", new String[]{key})) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT setting_value FROM app_settings WHERE setting_key=?", new String[]{key})) {
             return c.moveToFirst() ? c.getString(0) : fallback;
         }
     }
@@ -264,8 +349,8 @@ public class GroceryDatabase extends SQLiteOpenHelper {
 
     public User getAdminUser() {
         final String storeName = getSetting("store_name", "بقالة الشعيبي");
-        try (SQLiteDatabase db = getReadableDatabase();
-             Cursor c = db.rawQuery("SELECT global_id,first_name,last_name,email,role FROM users WHERE role='Administrator' AND active=1 LIMIT 1", null)) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT global_id,first_name,last_name,email,role FROM users WHERE role='Administrator' AND active=1 LIMIT 1", null)) {
             if (!c.moveToFirst()) return null;
             User u = new User();
             u.setGlobalID(c.getString(0));
@@ -285,8 +370,8 @@ public class GroceryDatabase extends SQLiteOpenHelper {
     public User authenticateUser(String email, String password) {
         if (email == null || password == null) return null;
         final String storeName = getSetting("store_name", "بقالة الشعيبي");
-        try (SQLiteDatabase db = getReadableDatabase();
-             Cursor c = db.rawQuery("SELECT global_id,first_name,last_name,email,role,password_hash FROM users WHERE lower(email)=lower(?) AND active=1 LIMIT 1", new String[]{email.trim()})) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT global_id,first_name,last_name,email,role,password_hash FROM users WHERE lower(email)=lower(?) AND active=1 LIMIT 1", new String[]{email.trim()})) {
             if (!c.moveToFirst()) return null;
             String hash = c.getString(5);
             if (!PasswordUtils.verifyPassword(password, hash)) return null;
@@ -324,10 +409,220 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         return getWritableDatabase().update("users", cv, "role='Administrator'", null) > 0;
     }
 
+    public User getUserByGlobalId(String globalId) {
+        if (globalId == null || globalId.trim().isEmpty()) return null;
+        final String storeName = getSetting("store_name", "بقالة الشعيبي");
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT global_id,first_name,last_name,email,role FROM users WHERE global_id=? AND active=1 LIMIT 1", new String[]{globalId})) {
+            if (!c.moveToFirst()) return null;
+            User u = new User();
+            u.setGlobalID(c.getString(0));
+            u.setCreatorID(c.getString(0));
+            u.setFirstName(c.getString(1));
+            u.setLastName(c.getString(2));
+            u.setEmail(c.getString(3));
+            u.setPositionTitle(c.getString(4));
+            u.setCompanyName(storeName);
+            return u;
+        }
+    }
+
+    public ArrayList<User> getActiveUsers() {
+        ArrayList<User> out = new ArrayList<>();
+        final String storeName = getSetting("store_name", "بقالة الشعيبي");
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT global_id,first_name,last_name,email,role FROM users WHERE active=1 ORDER BY CASE WHEN role='Administrator' THEN 0 ELSE 1 END, first_name", null)) {
+            while (c.moveToNext()) {
+                User u = new User();
+                u.setGlobalID(c.getString(0));
+                u.setCreatorID(c.getString(0));
+                u.setFirstName(c.getString(1));
+                u.setLastName(c.getString(2));
+                u.setEmail(c.getString(3));
+                u.setPositionTitle(c.getString(4));
+                u.setCompanyName(storeName);
+                out.add(u);
+            }
+        }
+        return out;
+    }
+
+    public boolean createWorker(String fullName, String email, String password) {
+        if (fullName == null || fullName.trim().isEmpty() || email == null || email.trim().isEmpty() || password == null || password.length() < 6) return false;
+        String clean = fullName.trim();
+        String first = clean;
+        String last = "";
+        int space = clean.indexOf(' ');
+        if (space > 0) { first = clean.substring(0, space); last = clean.substring(space + 1).trim(); }
+        ContentValues cv = new ContentValues();
+        cv.put("global_id", "W-" + UUID.randomUUID());
+        cv.put("first_name", first);
+        cv.put("last_name", last);
+        cv.put("email", email.trim().toLowerCase(Locale.ROOT));
+        cv.put("role", "Worker");
+        cv.put("password_hash", PasswordUtils.hashPassword(password));
+        cv.put("active", 1);
+        try {
+            long id = getWritableDatabase().insertOrThrow("users", null, cv);
+            return id > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create worker", e);
+            return false;
+        }
+    }
+
+    public boolean setWorkerActive(String globalId, boolean active) {
+        if (globalId == null || "local-admin".equals(globalId)) return false;
+        ContentValues cv = new ContentValues();
+        cv.put("active", active ? 1 : 0);
+        return getWritableDatabase().update("users", cv, "global_id=? AND role<>'Administrator'", new String[]{globalId}) > 0;
+    }
+
+    public ArrayList<Customer> getCustomers() {
+        ArrayList<Customer> out = new ArrayList<>();
+        String sql = "SELECT c._id,c.global_id,c.name,c.phone,c.address,c.credit_limit,c.active,c.created_at," +
+                "COALESCE(SUM(l.amount),0) balance FROM customers c LEFT JOIN customer_ledger l ON l.customer_global_id=c.global_id " +
+                "WHERE c.active=1 GROUP BY c._id ORDER BY balance DESC,c.name COLLATE NOCASE";
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery(sql, null)) {
+            while (c.moveToNext()) {
+                Customer customer = new Customer();
+                customer.setLocalId(c.getLong(0));
+                customer.setGlobalId(c.getString(1));
+                customer.setName(c.getString(2));
+                customer.setPhone(c.getString(3));
+                customer.setAddress(c.getString(4));
+                customer.setCreditLimit(c.getLong(5));
+                customer.setActive(c.getInt(6) == 1);
+                customer.setCreatedAt(c.getString(7));
+                customer.setBalance(c.getLong(8));
+                out.add(customer);
+            }
+        }
+        return out;
+    }
+
+    public Customer getCustomerByGlobalId(String globalId) {
+        if (globalId == null || globalId.trim().isEmpty()) return null;
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT _id,global_id,name,phone,address,credit_limit,active,created_at FROM customers WHERE global_id=? LIMIT 1", new String[]{globalId})) {
+            if (!c.moveToFirst()) return null;
+            Customer customer = new Customer();
+            customer.setLocalId(c.getLong(0));
+            customer.setGlobalId(c.getString(1));
+            customer.setName(c.getString(2));
+            customer.setPhone(c.getString(3));
+            customer.setAddress(c.getString(4));
+            customer.setCreditLimit(c.getLong(5));
+            customer.setActive(c.getInt(6) == 1);
+            customer.setCreatedAt(c.getString(7));
+            customer.setBalance(getCustomerBalance(globalId));
+            return customer;
+        }
+    }
+
+    public Customer findCustomerInText(String text) {
+        if (text == null || text.trim().isEmpty()) return null;
+        String hay = normalizeArabic(text);
+        Customer best = null;
+        int bestLen = 0;
+        for (Customer c : getCustomers()) {
+            String name = normalizeArabic(c.getName());
+            if (!name.isEmpty() && hay.contains(name) && name.length() > bestLen) {
+                best = c;
+                bestLen = name.length();
+            }
+        }
+        return best;
+    }
+
+    private String normalizeArabic(String value) {
+        if (value == null) return "";
+        return value.trim().toLowerCase(Locale.ROOT)
+                .replace('أ','ا').replace('إ','ا').replace('آ','ا')
+                .replace('ى','ي').replace('ة','ه').replace("ـ", "");
+    }
+
+    public boolean saveCustomer(Customer customer) {
+        if (customer == null || customer.getName().trim().isEmpty()) return false;
+        if (customer.getGlobalId().trim().isEmpty()) customer.setGlobalId("C-" + UUID.randomUUID());
+        ContentValues cv = new ContentValues();
+        cv.put("global_id", customer.getGlobalId());
+        cv.put("name", customer.getName().trim());
+        cv.put("phone", customer.getPhone().trim());
+        cv.put("address", customer.getAddress().trim());
+        cv.put("credit_limit", Math.max(0, customer.getCreditLimit()));
+        cv.put("active", 1);
+        cv.put("updated_at", LocalFormat.getCurrentDateTime()[0] + " " + LocalFormat.getCurrentDateTime()[1]);
+        SQLiteDatabase db = getWritableDatabase();
+        long row = db.insertWithOnConflict("customers", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        if (row == -1) {
+            return db.update("customers", cv, "global_id=?", new String[]{customer.getGlobalId()}) > 0;
+        }
+        recordAudit(db, "CREATE", "CUSTOMER", customer.getGlobalId(), customer.getName());
+        queueSync(db, "CUSTOMER", customer.getGlobalId(), "UPSERT", customer.getName());
+        return true;
+    }
+
+    public long getCustomerBalance(String customerGlobalId) {
+        return scalarLong("SELECT COALESCE(SUM(amount),0) FROM customer_ledger WHERE customer_global_id=?", new String[]{customerGlobalId});
+    }
+
+    public long getTotalReceivables() {
+        return scalarLong("SELECT COALESCE(SUM(CASE WHEN x.balance>0 THEN x.balance ELSE 0 END),0) FROM (SELECT customer_global_id,SUM(amount) balance FROM customer_ledger GROUP BY customer_global_id) x", null);
+    }
+
+    public boolean addCustomerPayment(String customerGlobalId, long amount, String note, String workerGlobalId) {
+        if (customerGlobalId == null || amount <= 0) return false;
+        long current = getCustomerBalance(customerGlobalId);
+        long safe = Math.min(amount, Math.max(0, current));
+        if (safe <= 0) return false;
+        SQLiteDatabase db = getWritableDatabase();
+        String gid = "L-" + UUID.randomUUID();
+        ContentValues cv = new ContentValues();
+        cv.put("global_id", gid);
+        cv.put("customer_global_id", customerGlobalId);
+        cv.put("entry_type", "PAYMENT");
+        cv.put("amount", -safe);
+        cv.put("worker_global_id", workerGlobalId);
+        cv.put("note", note == null ? "سداد من العميل" : note.trim());
+        long row = db.insertOrThrow("customer_ledger", null, cv);
+        recordAudit(db, "PAYMENT", "CUSTOMER", customerGlobalId, "سداد " + safe);
+        queueSync(db, "LEDGER", gid, "CREATE", String.valueOf(-safe));
+        return row > 0;
+    }
+
+    public ArrayList<String> getCustomerLedgerLines(String customerGlobalId) {
+        ArrayList<String> out = new ArrayList<>();
+        String sql = "SELECT entry_type,amount,note,created_at FROM customer_ledger WHERE customer_global_id=? ORDER BY _id DESC LIMIT 100";
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery(sql, new String[]{customerGlobalId})) {
+            while (c.moveToNext()) {
+                String type = c.getString(0);
+                long amount = c.getLong(1);
+                String note = c.getString(2);
+                String at = c.getString(3);
+                String label = "PAYMENT".equals(type) ? "سداد" : ("CREDIT_SALE".equals(type) ? "شراء آجل" : ("CREDIT_CANCEL".equals(type) ? "إلغاء شراء آجل" : "تعديل"));
+                out.add(at + "\n" + label + " • " + LocalFormat.getCurrencyFormat(Math.abs(amount)) + (note == null || note.isEmpty() ? "" : " • " + note));
+            }
+        }
+        return out;
+    }
+
+    private void queueSync(SQLiteDatabase db, String entityType, String entityId, String operation, String payload) {
+        ContentValues cv = new ContentValues();
+        cv.put("entity_type", entityType);
+        cv.put("entity_id", entityId);
+        cv.put("operation", operation);
+        cv.put("payload", payload == null ? "" : payload);
+        cv.put("state", "PENDING");
+        db.insert("sync_queue", null, cv);
+    }
+
     public ArrayList<String> getCategories() {
         ArrayList<String> list = new ArrayList<>();
-        try (SQLiteDatabase db = getReadableDatabase();
-             Cursor c = db.rawQuery("SELECT name FROM categories ORDER BY sort_order,name COLLATE NOCASE", null)) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT name FROM categories ORDER BY sort_order,name COLLATE NOCASE", null)) {
             while (c.moveToNext()) list.add(c.getString(0));
         }
         return list;
@@ -456,14 +751,16 @@ public class GroceryDatabase extends SQLiteOpenHelper {
 
     public void readItem(ArrayList<Item> list) {
         list.clear();
-        try (SQLiteDatabase db = getReadableDatabase(); Cursor c = db.rawQuery("SELECT * FROM items ORDER BY name COLLATE NOCASE", null)) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT * FROM items ORDER BY name COLLATE NOCASE", null)) {
             while (c.moveToNext()) list.add(cursorToItem(c));
         }
     }
 
     public Item getItemBySku(String sku) {
         if (sku == null || sku.trim().isEmpty()) return null;
-        try (SQLiteDatabase db = getReadableDatabase(); Cursor c = db.rawQuery("SELECT * FROM items WHERE sku=? LIMIT 1", new String[]{sku.trim()})) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT * FROM items WHERE sku=? LIMIT 1", new String[]{sku.trim()})) {
             return c.moveToFirst() ? cursorToItem(c) : null;
         }
     }
@@ -509,11 +806,17 @@ public class GroceryDatabase extends SQLiteOpenHelper {
     }
 
     public Order completeSale(List<Item> cart, String paymentMethod) throws SQLiteException {
-        return completeSale(cart, paymentMethod, 0, 0, "");
+        return completeSale(cart, paymentMethod, 0, 0, "", null, null);
     }
 
     public Order completeSale(List<Item> cart, String paymentMethod, long discountAmount,
                               long receivedAmount, String notes) throws SQLiteException {
+        return completeSale(cart, paymentMethod, discountAmount, receivedAmount, notes, null, null);
+    }
+
+    public Order completeSale(List<Item> cart, String paymentMethod, long discountAmount,
+                              long receivedAmount, String notes, @Nullable String customerGlobalId,
+                              @Nullable String workerGlobalId) throws SQLiteException {
         if (cart == null || cart.isEmpty()) throw new SQLiteException("سلة البيع فارغة");
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
@@ -529,6 +832,7 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                 }
                 Item snapshot = new Item(current.getGlobalID(), current.getName(), current.getPrice(), current.getTax(), current.getSku(), qty);
                 snapshot.setWholesalePrice(current.getWholesalePrice());
+                snapshot.setImagePath(current.getImagePath());
                 snapshot.setStock(current.getStock());
                 snapshot.setUnitType(current.getUnitType());
                 snapshots.add(snapshot);
@@ -541,9 +845,15 @@ public class GroceryDatabase extends SQLiteOpenHelper {
             long total = grossTotal - safeDiscount;
             long profit = total - cost;
             String method = paymentMethod == null || paymentMethod.trim().isEmpty() ? "cash" : paymentMethod.trim();
-            long paid = "transfer".equals(method) ? total : (receivedAmount <= 0 ? total : receivedAmount);
-            if ("cash".equals(method) && paid < total) throw new SQLiteException("المبلغ المستلم أقل من إجمالي الفاتورة");
-            long change = "cash".equals(method) ? Math.max(0, paid - total) : 0;
+            boolean cash = "cash".equals(method);
+            boolean credit = "credit".equals(method);
+            boolean electronic = "transfer".equals(method) || "wallet".equals(method);
+            if (credit && (customerGlobalId == null || customerGlobalId.trim().isEmpty())) {
+                throw new SQLiteException("اختر العميل عند البيع على الحساب");
+            }
+            long paid = credit ? 0 : (electronic ? total : (receivedAmount <= 0 ? total : receivedAmount));
+            if (cash && paid < total) throw new SQLiteException("المبلغ المستلم أقل من إجمالي الفاتورة");
+            long change = cash ? Math.max(0, paid - total) : 0;
 
             String[] dt = LocalFormat.getCurrentDateTime();
             String gid = "S-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase(Locale.US);
@@ -560,6 +870,9 @@ public class GroceryDatabase extends SQLiteOpenHelper {
             sale.put("paid_amount", paid);
             sale.put("change_amount", change);
             sale.put("notes", notes == null ? "" : notes.trim());
+            sale.put("customer_global_id", customerGlobalId);
+            sale.put("worker_global_id", workerGlobalId);
+            sale.put("sync_status", "LOCAL");
             sale.put("status", "Completed");
             long saleId = db.insertOrThrow("sales", null, sale);
 
@@ -571,6 +884,7 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                 line.put("sale_id", saleId);
                 line.put("item_global_id", snapshot.getGlobalID());
                 line.put("item_name", snapshot.getName());
+                line.put("image_path", snapshot.getImagePath());
                 line.put("quantity", qty);
                 line.put("unit_price", unitPrice);
                 line.put("purchase_price", purchasePrice);
@@ -588,7 +902,28 @@ public class GroceryDatabase extends SQLiteOpenHelper {
                 recordMovement(db, snapshot.getGlobalID(), "SALE", -(int) qty, before, after, "فاتورة #" + saleId);
             }
 
+            if (credit) {
+                Customer customer = getCustomerByGlobalId(customerGlobalId);
+                if (customer == null) throw new SQLiteException("العميل المحدد غير موجود");
+                long newBalance = getCustomerBalance(customerGlobalId) + total;
+                if (customer.getCreditLimit() > 0 && newBalance > customer.getCreditLimit()) {
+                    throw new SQLiteException("العملية تتجاوز الحد الائتماني للعميل");
+                }
+                String ledgerId = "L-" + UUID.randomUUID();
+                ContentValues ledger = new ContentValues();
+                ledger.put("global_id", ledgerId);
+                ledger.put("customer_global_id", customerGlobalId);
+                ledger.put("entry_type", "CREDIT_SALE");
+                ledger.put("amount", total);
+                ledger.put("sale_global_id", gid);
+                ledger.put("worker_global_id", workerGlobalId);
+                ledger.put("note", "فاتورة #" + saleId);
+                db.insertOrThrow("customer_ledger", null, ledger);
+                queueSync(db, "LEDGER", ledgerId, "CREATE", String.valueOf(total));
+            }
+
             recordAudit(db, "SALE", "SALE", gid, "فاتورة #" + saleId + " | " + total);
+            queueSync(db, "SALE", gid, "CREATE", String.valueOf(total));
             db.setTransactionSuccessful();
             Order result = new Order(gid, saleId, dt[0], dt[1], "Completed", totalItems, (double) total, snapshots);
             result.setPaymentMethod(method);
@@ -606,10 +941,16 @@ public class GroceryDatabase extends SQLiteOpenHelper {
         try {
             String status;
             String gid;
-            try (Cursor sale = db.rawQuery("SELECT global_id,status FROM sales WHERE _id=? LIMIT 1", new String[]{String.valueOf(saleId)})) {
+            String paymentMethod;
+            String customerGlobalId;
+            long saleTotal;
+            try (Cursor sale = db.rawQuery("SELECT global_id,status,payment_method,customer_global_id,total_amount FROM sales WHERE _id=? LIMIT 1", new String[]{String.valueOf(saleId)})) {
                 if (!sale.moveToFirst()) return false;
                 gid = sale.getString(0);
                 status = sale.getString(1);
+                paymentMethod = sale.getString(2);
+                customerGlobalId = sale.isNull(3) ? null : sale.getString(3);
+                saleTotal = sale.getLong(4);
             }
             if (!"Completed".equalsIgnoreCase(status)) return false;
 
@@ -634,7 +975,20 @@ public class GroceryDatabase extends SQLiteOpenHelper {
             update.put("notes", cleanReason.isEmpty() ? "تم إلغاء الفاتورة" : "إلغاء: " + cleanReason);
             int rows = db.update("sales", update, "_id=? AND status='Completed'", new String[]{String.valueOf(saleId)});
             if (rows <= 0) return false;
+            if ("credit".equalsIgnoreCase(paymentMethod) && customerGlobalId != null && !customerGlobalId.isEmpty()) {
+                String ledgerId = "L-" + UUID.randomUUID();
+                ContentValues ledger = new ContentValues();
+                ledger.put("global_id", ledgerId);
+                ledger.put("customer_global_id", customerGlobalId);
+                ledger.put("entry_type", "CREDIT_CANCEL");
+                ledger.put("amount", -saleTotal);
+                ledger.put("sale_global_id", gid);
+                ledger.put("note", "عكس فاتورة ملغاة #" + saleId);
+                db.insertOrThrow("customer_ledger", null, ledger);
+                queueSync(db, "LEDGER", ledgerId, "CREATE", String.valueOf(-saleTotal));
+            }
             recordAudit(db, "CANCEL", "SALE", gid, "فاتورة #" + saleId + " | " + cleanReason);
+            queueSync(db, "SALE", gid, "UPDATE", "Cancelled");
             db.setTransactionSuccessful();
             return true;
         } finally { db.endTransaction(); }
@@ -642,7 +996,8 @@ public class GroceryDatabase extends SQLiteOpenHelper {
 
     public void readOrders(ArrayList<Order> out) {
         out.clear();
-        try (SQLiteDatabase db = getReadableDatabase(); Cursor c = db.rawQuery("SELECT * FROM sales ORDER BY _id DESC", null)) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT * FROM sales ORDER BY _id DESC", null)) {
             while (c.moveToNext()) {
                 long id = c.getLong(c.getColumnIndexOrThrow("_id"));
                 String gid = c.getString(c.getColumnIndexOrThrow("global_id"));
@@ -665,10 +1020,14 @@ public class GroceryDatabase extends SQLiteOpenHelper {
 
     private ArrayList<Item> readSaleItems(SQLiteDatabase db, long saleId) {
         ArrayList<Item> items = new ArrayList<>();
-        try (Cursor c = db.rawQuery("SELECT item_global_id,item_name,quantity,unit_price,purchase_price FROM sale_items WHERE sale_id=?", new String[]{String.valueOf(saleId)})) {
+        String sql = "SELECT si.item_global_id,si.item_name,si.quantity,si.unit_price,si.purchase_price," +
+                "COALESCE(NULLIF(si.image_path,''),i.image) " +
+                "FROM sale_items si LEFT JOIN items i ON i.global_id=si.item_global_id WHERE si.sale_id=?";
+        try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(saleId)})) {
             while (c.moveToNext()) {
                 Item item = new Item(c.getString(0), c.getString(1), c.getLong(3), 0.0, "", c.getLong(2));
                 item.setWholesalePrice(c.getLong(4));
+                item.setImagePath(c.isNull(5) ? null : c.getString(5));
                 items.add(item);
             }
         }
@@ -677,7 +1036,8 @@ public class GroceryDatabase extends SQLiteOpenHelper {
 
     public void readTransactions(ArrayList<Transaction> out) {
         out.clear();
-        try (SQLiteDatabase db = getReadableDatabase(); Cursor c = db.rawQuery("SELECT * FROM sales ORDER BY _id DESC", null)) {
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT * FROM sales ORDER BY _id DESC", null)) {
             while (c.moveToNext()) {
                 out.add(new Transaction(
                         c.getString(c.getColumnIndexOrThrow("global_id")),
@@ -699,6 +1059,19 @@ public class GroceryDatabase extends SQLiteOpenHelper {
     public int getItemCount() { return scalarInt("SELECT COUNT(*) FROM items", null); }
     public int getOutOfStockCount() { return scalarInt("SELECT COUNT(*) FROM items WHERE stock_quantity<=0", null); }
     public int getLowStockCount() { return scalarInt("SELECT COUNT(*) FROM items WHERE stock_quantity>0 AND stock_quantity<=min_stock", null); }
+    public int getWorkerTodaySalesCount(String workerId) {
+        if (workerId == null) return 0;
+        return scalarInt("SELECT COUNT(*) FROM sales WHERE sale_date=? AND status='Completed' AND worker_global_id=?", new String[]{LocalFormat.getCurrentDateTime()[0], workerId});
+    }
+    public long getWorkerTodaySalesTotal(String workerId) {
+        if (workerId == null) return 0;
+        return scalarLong("SELECT COALESCE(SUM(total_amount),0) FROM sales WHERE sale_date=? AND status='Completed' AND worker_global_id=?", new String[]{LocalFormat.getCurrentDateTime()[0], workerId});
+    }
+    public long getWorkerLifetimeSalesTotal(String workerId) {
+        if (workerId == null) return 0;
+        return scalarLong("SELECT COALESCE(SUM(total_amount),0) FROM sales WHERE status='Completed' AND worker_global_id=?", new String[]{workerId});
+    }
+
     public int getTodaySalesCount() { return scalarInt("SELECT COUNT(*) FROM sales WHERE sale_date=? AND status='Completed'", new String[]{LocalFormat.getCurrentDateTime()[0]}); }
     public long getTodaySalesTotal() { return scalarLong("SELECT COALESCE(SUM(total_amount),0) FROM sales WHERE sale_date=? AND status='Completed'", new String[]{LocalFormat.getCurrentDateTime()[0]}); }
     public long getTodayProfit() { return scalarLong("SELECT COALESCE(SUM(total_profit),0) FROM sales WHERE sale_date=? AND status='Completed'", new String[]{LocalFormat.getCurrentDateTime()[0]}); }

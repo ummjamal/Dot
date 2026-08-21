@@ -56,6 +56,8 @@ public class SettingsFragment extends Fragment {
         Button save = view.findViewById(R.id.settingsSave);
         Button backup = view.findViewById(R.id.settingsBackup);
         Button restore = view.findViewById(R.id.settingsRestore);
+        Button cloudSetup = view.findViewById(R.id.settingsCloudSetup);
+        TextView cloudStatus = view.findViewById(R.id.settingsCloudStatus);
         Button developerCall = view.findViewById(R.id.developerCall);
         Button developerWhatsapp = view.findViewById(R.id.developerWhatsapp);
         Button developerEmail = view.findViewById(R.id.developerEmail);
@@ -69,13 +71,22 @@ public class SettingsFragment extends Fragment {
             owner.setText(db.getSetting("owner_name", getString(R.string.owner_default_name)));
             email.setText(db.getSetting("owner_email", getString(R.string.owner_default_email)));
             phone.setText(db.getSetting("owner_phone", ""));
-            address.setText(db.getSetting("store_address", "الضالع - اليمن"));
+            address.setText(db.getSetting("store_address", "اليمن - محافظة الضالع - مديرية قعطبة - حي المحكمة - جوار محكمة قعطبة الابتدائية"));
             receiptFooter.setText(db.getSetting("receipt_footer", "شكرًا لتسوقكم من بقالة الشعيبي"));
             securityWarning.setVisibility(db.isDefaultAdminPassword() ? View.VISIBLE : View.GONE);
             lifetimeSales.setText(LocalFormat.getCurrencyFormat(db.getLifetimeSalesTotal()));
             lifetimeProfit.setText(LocalFormat.getCurrencyFormat(db.getLifetimeProfit()));
             inventoryValue.setText(LocalFormat.getCurrencyFormat(db.getInventoryRetailValue()));
+            boolean cloudEnabled = "1".equals(db.getSetting("cloud_sync_enabled", "0"));
+            cloudStatus.setText(cloudEnabled ? "المزامنة السحابية مفعّلة" : "جاهزة للربط • غير مفعّلة بعد");
         }
+
+        cloudSetup.setOnClickListener(v -> new AlertDialog.Builder(requireContext())
+                .setTitle("تفعيل المزامنة بين الأجهزة")
+                .setMessage("هذه النسخة جهزت حسابات العمال والعملاء والديون وقائمة مزامنة محلية. لتصل عمليات كل عامل إلى هاتف المالك نحتاج إنشاء مشروع Firebase خاص ببقالة الشعيبي ثم ربط التطبيق به مرة واحدة. لن نضع مفاتيح أو بيانات حساسة عشوائيًا داخل الكود.")
+                .setNegativeButton("لاحقًا", null)
+                .setPositiveButton("مفهوم", null)
+                .show());
 
         version.setText("الإصدار " + BuildConfig.VERSION_NAME + " • يعمل دون إنترنت");
 

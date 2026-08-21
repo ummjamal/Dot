@@ -29,7 +29,7 @@ public final class BackupManager {
     private static final String DB_ENTRY = "database/" + GroceryDatabase.DATABASE_NAME;
     private static final String IMAGE_PREFIX = "images/";
     private static final String VERSION_ENTRY = "backup-version.txt";
-    private static final String BACKUP_VERSION = "BaqalatAlshuibiBackupV3";
+    private static final String BACKUP_VERSION = "BaqalatAlshuibiBackupV5";
 
     private static final long MAX_DATABASE_BYTES = 128L * 1024L * 1024L;
     private static final long MAX_IMAGE_BYTES = 25L * 1024L * 1024L;
